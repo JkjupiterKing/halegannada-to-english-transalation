@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hale-Osa Kannada - ಹಳೆಗನ್ನಡ</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary-red: #ff6b6b;
+        --primary-yellow: #ffd93d;
+        --text-dark: #333;
+      }
+
+      body {
+        font-family: "Noto Sans Kannada", sans-serif;
+        background-color: #fff9f0;
+      }
+
+      .navbar {
+        background: linear-gradient(
+          135deg,
+          var(--primary-red),
+          var(--primary-yellow)
+        );
+        padding: 1rem 2rem;
+      }
+
+      .navbar-brand,
+      .nav-link {
+        color: white !important;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        color: #ffe5e5 !important;
+      }
+
+      .translation-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem auto;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
+      }
+
+      .input-area,
+      .output-area {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .btn-translate {
+        background: linear-gradient(
+          135deg,
+          var(--primary-red),
+          var(--primary-yellow)
+        );
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: transform 0.3s ease;
+      }
+
+      .btn-translate:hover {
+        transform: translateY(-2px);
+      }
+
+      .btn-audio {
+        background: none;
+        border: 2px solid var(--primary-red);
+        color: var(--primary-red);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .btn-audio:hover {
+        background: var(--primary-red);
+        color: white;
+      }
+
+      .word-history {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #ddd;
+      }
+
+      .history-item {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .history-item:hover {
+        background: #f0f0f0;
+      }
+
+      @media (max-width: 768px) {
+        .translation-container {
+          margin: 1rem;
+          padding: 1rem;
+        }
+
+        .navbar-collapse {
+          background: rgba(255, 255, 255, 0.95);
+          padding: 1rem;
+          border-radius: 10px;
+          margin-top: 1rem;
+        }
+
+        .nav-link {
+          color: var(--text-dark) !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="../index.html">ಹಳೆಗನ್ನಡ</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="text-translation.html"
+                >Text Translation</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="hale-osa-kannada.html"
+                >Hale-Osa Kannada</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="about.html">About</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="translation-container">
+        <h2 class="text-center mb-4">Hale-Osa Kannada</h2>
+
+        <div class="input-area">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <label class="form-label mb-0">Enter Halegannada Word:</label>
+            <button
+              class="btn-audio"
+              onclick="speakHalegannada()"
+              title="Listen to Halegannada"
+            >
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control"
+              id="inputWord"
+              placeholder="Enter a word..."
+            />
+            <button class="btn-translate" onclick="translateWord()">
+              Translate
+            </button>
+          </div>
+        </div>
+
+        <div class="output-area">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <label class="form-label mb-0">Translation:</label>
+            <button
+              class="btn-audio"
+              onclick="speakTranslation()"
+              title="Listen to translation"
+            >
+              <i class="fas fa-volume-up"></i>
+            </button>
+          </div>
+          <div id="translationOutput" class="p-3 bg-white rounded">
+            Your translation will appear here...
+          </div>
+        </div>
+
+        <div class="word-history">
+          <h4>Recent Translations</h4>
+          <div id="historyList">
+            <!-- History items will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Text-to-speech functionality
+      function speakText(text, lang = "kn-IN") {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      function speakHalegannada() {
+        const text = document.getElementById("inputWord").value;
+        if (text) {
+          speakText(text);
+        }
+      }
+
+      function speakTranslation() {
+        const text = document.getElementById("translationOutput").textContent;
+        if (text && text !== "Your translation will appear here...") {
+          speakText(text, "en-US");
+        }
+      }
+
+      // Translation history management
+      let translationHistory = [];
+
+      function addToHistory(original, translated) {
+        translationHistory.unshift({ original, translated });
+        if (translationHistory.length > 5) {
+          translationHistory.pop();
+        }
+        updateHistoryDisplay();
+      }
+
+      function updateHistoryDisplay() {
+        const historyList = document.getElementById("historyList");
+        historyList.innerHTML = translationHistory
+          .map(
+            (item) => `
+                <div class="history-item">
+                    <div>
+                        <strong>${item.original}</strong> → ${item.translated}
+                    </div>
+                    <button class="btn-audio" onclick="speakText('${item.original}')" title="Listen">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      async function translateWord() {
+        const inputWord = document.getElementById("inputWord").value.trim();
+        if (!inputWord) return;
+
+        // For dictionary lookup, we expect a single word or a few words at most.
+        // The server will primarily use Dictionary.pkl for this specific source.
+        document.getElementById("translationOutput").textContent =
+          "Translating...";
+
+        try {
+          const response = await fetch("/translate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            // Add a 'source' field to indicate this is a dictionary lookup request
+            body: JSON.stringify({ text: inputWord, source: "dictionary" }),
+          });
+
+          if (!response.ok) {
+            let errorMsg = "Translation failed";
+            try {
+              const errData = await response.json();
+              errorMsg = errData.error || errorMsg;
+            } catch (e) {}
+            throw new Error(errorMsg);
+          }
+
+          const data = await response.json();
+          // The server, for "dictionary" source, should return the dictionary result in the 'kannada' field.
+          // Or, if we adjust server to return a single 'translation' field for this source, use data.translation.
+          // For now, assuming server sends {'kannada': ..., 'english': ...}, we want the 'kannada' part for dictionary lookup.
+          const translation = data.kannada; // <<<<<<<<<<<< KEY CHANGE HERE to use data.kannada
+
+          if (translation) {
+            document.getElementById("translationOutput").textContent =
+              translation;
+            addToHistory(inputWord, translation);
+          } else {
+            document.getElementById("translationOutput").textContent =
+              data.error || "No translation found.";
+          }
+        } catch (error) {
+          document.getElementById("translationOutput").textContent =
+            error.message || "Error: Could not translate word";
+        }
+      }
+
+      // Enter key support
+      document
+        .getElementById("inputWord")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            translateWord();
+          }
+        });
+    </script>
+  </body>
+</html>

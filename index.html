@@ -1,0 +1,240 @@
+ <!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ಹಳೆಗನ್ನಡ - Halegannada Translation Hub</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --karnataka-yellow: #fff59d; /* Softer Yellow */
+        --karnataka-red: #e57373; /* Softer Red */
+        --text-dark: #333;
+        --text-light: #ffffff; /* For text on red backgrounds */
+      }
+
+      body {
+        font-family: "Noto Sans Kannada", sans-serif;
+        background-color: var(--karnataka-yellow); /* Main background yellow */
+        color: var(--karnataka-red); /* Default text red */
+      }
+
+      .navbar {
+        background-color: var(--karnataka-red); /* Solid red navbar */
+        padding: 1rem 2rem;
+        border-bottom: 3px solid var(--karnataka-yellow); /* Yellow accent border */
+      }
+
+      .navbar-brand,
+      .nav-link {
+        color: var(
+          --karnataka-yellow
+        ) !important; /* Yellow text on red navbar */
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        color: #fffde7 !important; /* Lighter yellow for hover - can adjust if needed */
+      }
+
+      .navbar-toggler {
+        border-color: var(--karnataka-yellow); /* Yellow border for toggler */
+      }
+      .navbar-toggler-icon {
+        /* SVG for toggler icon - consider making stroke darker if yellow is too light */
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(229, 115, 115, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); /* Adjusted to softer red for visibility */
+      }
+
+      .hero-section {
+        background-color: var(--karnataka-red); /* Red background for hero */
+        color: var(--karnataka-yellow); /* Yellow text for hero */
+        padding: 4rem 0;
+        margin-bottom: 3rem;
+        text-align: center;
+        border-bottom: 5px solid var(--karnataka-yellow);
+      }
+
+      .hero-section h1,
+      .hero-section p {
+        color: var(--karnataka-yellow);
+      }
+
+      .feature-card {
+        background: #ffffe0; /* Even lighter yellow for cards for contrast */
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+        border: 2px solid var(--karnataka-red);
+        color: var(--karnataka-red);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 20px rgba(229, 115, 115, 0.2); /* Softer red shadow */
+      }
+
+      .feature-card h3 {
+        color: var(--karnataka-red);
+      }
+      .feature-card p {
+        /* Using the main --karnataka-red for p, as card bg is very light */
+        color: var(--karnataka-red);
+      }
+
+      .feature-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: var(--karnataka-red);
+      }
+
+      .btn-outline-danger {
+        color: var(--karnataka-red);
+        border-color: var(--karnataka-red);
+      }
+      .btn-outline-danger:hover {
+        background-color: var(--karnataka-red);
+        color: var(--karnataka-yellow);
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6 {
+        color: var(--karnataka-red);
+      }
+
+      a {
+        color: var(--karnataka-red);
+      }
+      a:hover {
+        color: #b71c1c; /* Darker, more muted red for link hover */
+      }
+
+      @media (max-width: 768px) {
+        .hero-section {
+          padding: 2.5rem 0;
+        }
+
+        .navbar-collapse {
+          background: var(--karnataka-red);
+          padding: 1rem;
+          border-radius: 10px;
+          margin-top: 1rem;
+          border: 1px solid var(--karnataka-yellow);
+        }
+
+        .nav-link {
+          color: var(--karnataka-yellow) !important;
+        }
+        .nav-link:hover {
+          color: #fffde7 !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">ಹಳೆಗನ್ನಡ</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="pages/text-translation.html"
+                >Text Translation</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="pages/hale-osa-kannada.html"
+                >Hale-Osa DICT</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="pages/about.html">About</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <section class="hero-section">
+      <div class="container">
+        <h1 class="display-4 mb-4">ಹಳೆಗನ್ನಡ Translation Hub</h1>
+        <p class="lead mb-4">
+          Discover the beauty of ancient Kannada literature through modern
+          translation
+        </p>
+      </div>
+    </section>
+
+    <main class="container mb-5">
+      <div class="row">
+        <div class="col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon">📝</div>
+            <h3>Text Translation</h3>
+            <p>
+              Translate entire passages of Halegannada text into modern language
+              with our advanced AI-powered translation system.
+            </p>
+            <a href="pages/text-translation.html" class="btn btn-outline-danger"
+              >Try Text Translation</a
+            >
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="feature-card">
+            <div class="feature-icon">🔤</div>
+            <h3>Hale-Osa Kannada</h3>
+            <p>
+              Get precise translations of individual Halegannada words with
+              detailed meanings and context.
+            </p>
+            <a href="pages/hale-osa-kannada.html" class="btn btn-outline-danger"
+              >Try Hale-Osa Kannada</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-card mt-4">
+        <h2 class="text-center mb-4">Why Halegannada Matters</h2>
+        <p>
+          Halegannada, or Old Kannada, is the ancestor of the modern Kannada
+          language. It was predominantly used between the 6th and 14th centuries
+          CE. This ancient form of Kannada has given us countless literary
+          masterpieces including works by renowned poets like Pampa, Ranna, and
+          Ponna.
+        </p>
+        <p>
+          Our translation tools help bridge the gap between this rich historical
+          language and modern readers, making centuries of wisdom and literature
+          accessible to everyone.
+        </p>
+      </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

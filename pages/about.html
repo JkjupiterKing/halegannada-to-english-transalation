@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - ಹಳೆಗನ್ನಡ</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary-red: #ff6b6b;
+        --primary-yellow: #ffd93d;
+        --text-dark: #333;
+      }
+
+      body {
+        font-family: "Noto Sans Kannada", sans-serif;
+        background-color: #fff9f0;
+      }
+
+      .navbar {
+        background: linear-gradient(
+          135deg,
+          var(--primary-red),
+          var(--primary-yellow)
+        );
+        padding: 1rem 2rem;
+      }
+
+      .navbar-brand,
+      .nav-link {
+        color: white !important;
+        font-weight: 600;
+      }
+
+      .nav-link:hover {
+        color: #ffe5e5 !important;
+      }
+
+      .about-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin: 2rem auto;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
+      }
+
+      .section-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border-left: 5px solid var(--primary-red);
+      }
+
+      .feature-icon {
+        font-size: 2.5rem;
+        color: var(--primary-red);
+        margin-bottom: 1rem;
+      }
+
+      .timeline {
+        position: relative;
+        padding: 2rem 0;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 2px;
+        height: 100%;
+        background: linear-gradient(var(--primary-red), var(--primary-yellow));
+      }
+
+      .timeline-item {
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .timeline-content {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-left: 2rem;
+        border-left: 4px solid var(--primary-yellow);
+      }
+
+      .timeline-date {
+        color: var(--primary-red);
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
+
+      @media (max-width: 768px) {
+        .about-container {
+          margin: 1rem;
+          padding: 1rem;
+        }
+
+        .navbar-collapse {
+          background: rgba(255, 255, 255, 0.95);
+          padding: 1rem;
+          border-radius: 10px;
+          margin-top: 1rem;
+        }
+
+        .nav-link {
+          color: var(--text-dark) !important;
+        }
+
+        .timeline::before {
+          left: 0;
+        }
+
+        .timeline-content {
+          margin-left: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="../index.html">ಹಳೆಗನ್ನಡ</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="../index.html">Home</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="text-translation.html"
+                >Text Translation</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="hale-osa-kannada.html"
+                >Hale-Osa Kannada</a
+              >
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="about.html">About</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="about-container">
+        <h1 class="text-center mb-5">About ಹಳೆಗನ್ನಡ Translation Project</h1>
+
+        <div class="section-card">
+          <div class="feature-icon">📚</div>
+          <h2>What is Halegannada?</h2>
+          <p>
+            Halegannada (ಹಳೆಗನ್ನಡ), also known as Old Kannada, is the ancestor
+            of the modern Kannada language. It was predominantly used between
+            the 6th and 14th centuries CE, during which it produced a rich body
+            of literature encompassing poetry, prose, and various other forms of
+            written expression.
+          </p>
+          <p>
+            This ancient form of Kannada was the language of royal courts,
+            scholarly discourse, and literary excellence, giving us works by
+            renowned poets like Pampa, Ranna, and Ponna, collectively known as
+            the "Three Gems of Kannada Literature."
+          </p>
+        </div>
+
+        <div class="section-card">
+          <div class="feature-icon">🎯</div>
+          <h2>Our Mission</h2>
+          <p>
+            Our mission is to make Halegannada accessible to modern readers by
+            providing accurate translations and preserving the cultural heritage
+            embedded in these ancient texts. We aim to:
+          </p>
+          <ul>
+            <li>Bridge the gap between ancient and modern Kannada</li>
+            <li>Preserve and promote Kannada literary heritage</li>
+            <li>Make historical texts accessible to modern readers</li>
+            <li>
+              Support scholars and enthusiasts in their study of classical
+              Kannada literature
+            </li>
+          </ul>
+        </div>
+
+        <div class="section-card">
+          <div class="feature-icon">⚡</div>
+          <h2>Features</h2>
+          <div class="row">
+            <div class="col-md-6">
+              <h4>Text Translation</h4>
+              <p>
+                Translate entire passages of Halegannada text with context-aware
+                translation that preserves the meaning and nuance of the
+                original text.
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h4>Hale-Osa Kannada</h4>
+              <p>
+                Get precise translations of individual Halegannada words with
+                detailed meanings and usage examples from classical texts.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="feature-icon">📅</div>
+          <h2>Historical Timeline</h2>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-content">
+                <div class="timeline-date">6th - 9th Century CE</div>
+                <p>
+                  Early Halegannada period, marked by inscriptions and early
+                  literary works
+                </p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-content">
+                <div class="timeline-date">10th Century CE</div>
+                <p>
+                  Golden age of Halegannada literature under the patronage of
+                  the Rashtrakuta dynasty
+                </p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-content">
+                <div class="timeline-date">11th - 14th Century CE</div>
+                <p>
+                  Later Halegannada period, featuring works of the Hoysala
+                  empire and transition to Middle Kannada
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
