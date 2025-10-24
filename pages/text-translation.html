@@ -17,37 +17,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <link rel="stylesheet" href="../assets/css/style.css" />
     <style>
-      :root {
-        --primary-red: #ff6b6b;
-        --primary-yellow: #ffd93d;
-        --text-dark: #333;
-      }
-
-      body {
-        font-family: "Noto Sans Kannada", sans-serif;
-        background-color: #fff9f0;
-      }
-
-      .navbar {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        padding: 1rem 2rem;
-      }
-
-      .navbar-brand,
-      .nav-link {
-        color: white !important;
-        font-weight: 600;
-      }
-
-      .nav-link:hover {
-        color: #ffe5e5 !important;
-      }
-
       .translation-container {
         background: white;
         border-radius: 15px;
@@ -68,8 +39,8 @@
       .btn-translate {
         background: linear-gradient(
           135deg,
-          var(--primary-red),
-          var(--primary-yellow)
+          var(--karnataka-red),
+          var(--karnataka-yellow)
         );
         color: white;
         border: none;
@@ -85,8 +56,8 @@
 
       .btn-audio {
         background: none;
-        border: 2px solid var(--primary-red);
-        color: var(--primary-red);
+        border: 2px solid var(--karnataka-red);
+        color: var(--karnataka-red);
         border-radius: 50%;
         width: 40px;
         height: 40px;
@@ -98,7 +69,7 @@
       }
 
       .btn-audio:hover {
-        background: var(--primary-red);
+        background: var(--karnataka-red);
         color: white;
       }
 
@@ -113,24 +84,13 @@
       }
 
       .image-upload-area:hover {
-        border-color: var(--primary-red);
+        border-color: var(--karnataka-red);
       }
 
       @media (max-width: 768px) {
         .translation-container {
           margin: 1rem;
           padding: 1rem;
-        }
-
-        .navbar-collapse {
-          background: rgba(255, 255, 255, 0.95);
-          padding: 1rem;
-          border-radius: 10px;
-          margin-top: 1rem;
-        }
-
-        .nav-link {
-          color: var(--text-dark) !important;
         }
       }
     </style>
