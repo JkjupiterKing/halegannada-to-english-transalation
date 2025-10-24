@@ -349,6 +349,26 @@ def translate():
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
 
+@app.route('/translate-halegannada', methods=['POST'])
+def translate_halegannada():
+    try:
+        data = request.json
+        text_input = data.get('text', '')
+
+        if not text_input:
+            return jsonify({'error': 'No text provided'}), 400
+
+        translation = get_english_translation(text_input)
+
+        if "error" in translation.lower():
+             return jsonify({'error': translation}), 500
+
+        return jsonify({'translation': translation})
+    except Exception as e:
+        print(f"Error in /translate-halegannada: {e}")
+        traceback.print_exc()
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
     # This is mainly for the Dictionary.pkl, but good practice.
