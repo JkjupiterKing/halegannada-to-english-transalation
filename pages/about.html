@@ -16,37 +16,8 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <link rel="stylesheet" href="../assets/css/style.css" />
     <style>
-      :root {
-        --primary-red: #ff6b6b;
-        --primary-yellow: #ffd93d;
-        --text-dark: #333;
-      }
-
-      body {
-        font-family: "Noto Sans Kannada", sans-serif;
-        background-color: #fff9f0;
-      }
-
-      .navbar {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        padding: 1rem 2rem;
-      }
-
-      .navbar-brand,
-      .nav-link {
-        color: white !important;
-        font-weight: 600;
-      }
-
-      .nav-link:hover {
-        color: #ffe5e5 !important;
-      }
-
       .about-container {
         background: white;
         border-radius: 15px;
@@ -61,12 +32,12 @@
         border-radius: 10px;
         padding: 2rem;
         margin-bottom: 2rem;
-        border-left: 5px solid var(--primary-red);
+        border-left: 5px solid var(--karnataka-red);
       }
 
       .feature-icon {
         font-size: 2.5rem;
-        color: var(--primary-red);
+        color: var(--karnataka-red);
         margin-bottom: 1rem;
       }
 
@@ -82,7 +53,10 @@
         transform: translateX(-50%);
         width: 2px;
         height: 100%;
-        background: linear-gradient(var(--primary-red), var(--primary-yellow));
+        background: linear-gradient(
+          var(--karnataka-red),
+          var(--karnataka-yellow)
+        );
       }
 
       .timeline-item {
@@ -96,11 +70,11 @@
         padding: 1.5rem;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         margin-left: 2rem;
-        border-left: 4px solid var(--primary-yellow);
+        border-left: 4px solid var(--karnataka-yellow);
       }
 
       .timeline-date {
-        color: var(--primary-red);
+        color: var(--karnataka-red);
         font-weight: bold;
         margin-bottom: 0.5rem;
       }
@@ -109,17 +83,6 @@
         .about-container {
           margin: 1rem;
           padding: 1rem;
-        }
-
-        .navbar-collapse {
-          background: rgba(255, 255, 255, 0.95);
-          padding: 1rem;
-          border-radius: 10px;
-          margin-top: 1rem;
-        }
-
-        .nav-link {
-          color: var(--text-dark) !important;
         }
 
         .timeline::before {

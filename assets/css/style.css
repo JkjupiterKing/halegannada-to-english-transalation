@@ -1,0 +1,61 @@
+:root {
+  --karnataka-yellow: #fff59d; /* Softer Yellow */
+  --karnataka-red: #e57373; /* Softer Red */
+  --text-dark: #333;
+  --text-light: #ffffff; /* For text on red backgrounds */
+}
+
+body {
+  font-family: "Noto Sans Kannada", sans-serif;
+  background-color: var(--karnataka-yellow); /* Main background yellow */
+  color: var(--karnataka-red); /* Default text red */
+  background-image: url('../images/background.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.navbar {
+  background-color: var(--karnataka-red); /* Solid red navbar */
+  padding: 1rem 2rem;
+  border-bottom: 3px solid var(--karnataka-yellow); /* Yellow accent border */
+}
+
+.navbar-brand,
+.nav-link {
+  color: var(
+    --karnataka-yellow
+  ) !important; /* Yellow text on red navbar */
+  font-weight: 600;
+}
+
+.nav-link:hover {
+  color: #fffde7 !important; /* Lighter yellow for hover - can adjust if needed */
+}
+
+.navbar-toggler {
+  border-color: var(--karnataka-yellow); /* Yellow border for toggler */
+}
+
+.navbar-toggler-icon {
+  /* SVG for toggler icon - consider making stroke darker if yellow is too light */
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(229, 115, 115, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); /* Adjusted to softer red for visibility */
+}
+
+@media (max-width: 768px) {
+  .navbar-collapse {
+    background: var(--karnataka-red);
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    border: 1px solid var(--karnataka-yellow);
+  }
+
+  .nav-link {
+    color: var(--karnataka-yellow) !important;
+  }
+
+  .nav-link:hover {
+    color: #fffde7 !important;
+  }
+}
