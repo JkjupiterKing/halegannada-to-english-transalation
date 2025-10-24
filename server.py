@@ -16,6 +16,9 @@ import base64
 from PIL import Image
 from io import BytesIO
 import random
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 app = Flask(__name__)
 CORS(app)
@@ -349,6 +352,71 @@ def translate():
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
 
+# Load the model and tokenizers
+try:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(current_dir, 'assets', 'seq2seq_model.h5')
+    input_tokenizer_path = os.path.join(current_dir, 'assets', 'input_tokenizer.pkl')
+    target_tokenizer_path = os.path.join(current_dir, 'assets', 'target_tokenizer.pkl')
+
+    if os.path.exists(model_path) and os.path.getsize(model_path) > 0:
+        model = tf.keras.models.load_model(model_path)
+    else:
+        model = None
+
+    if os.path.exists(input_tokenizer_path) and os.path.getsize(input_tokenizer_path) > 0:
+        with open(input_tokenizer_path, 'rb') as f:
+            input_tokenizer = pickle.load(f)
+    else:
+        input_tokenizer = None
+
+    if os.path.exists(target_tokenizer_path) and os.path.getsize(target_tokenizer_path) > 0:
+        with open(target_tokenizer_path, 'rb') as f:
+            target_tokenizer = pickle.load(f)
+    else:
+        target_tokenizer = None
+
+except Exception as e:
+    print(f"Error loading model or tokenizers: {e}")
+    model, input_tokenizer, target_tokenizer = None, None, None
+
+def get_english_translation_seq2seq(text_input):
+    """
+    Translates Halegannada text to English using a Seq2Seq model.
+    If the model is not available, it falls back to the DeepSeek API.
+    """
+    if not all([model, input_tokenizer, target_tokenizer]):
+        print("Seq2Seq model not available, falling back to DeepSeek API.")
+        translation = get_english_translation(text_input)
+        if "error" in translation.lower() or "failed" in translation.lower():
+            return translation, "error"
+        return translation, "completed"
+
+    try:
+        # Tokenize the input text
+        input_seq = input_tokenizer.texts_to_sequences([text_input])
+        if not input_seq[0]:
+            return "Input contains out-of-vocabulary words.", "error"
+
+        # Pad the input sequence
+        input_seq = pad_sequences(input_seq, maxlen=model.input_shape[1], padding='post')
+
+        # Get the model's prediction
+        prediction = model.predict(input_seq)
+
+        # Convert prediction to word sequence
+        output_seq = [np.argmax(token) for token in prediction[0]]
+
+        # Detokenize the output sequence
+        output_text = target_tokenizer.sequences_to_texts([output_seq])
+
+        return output_text[0], "completed"
+
+    except Exception as e:
+        print(f"Error during Seq2Seq translation: {e}")
+        traceback.print_exc()
+        return f"An error occurred during translation: {e}", "error"
+
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
     try:
@@ -357,9 +425,10 @@ def translate_halegannada():
         if not text_input:
             return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        translation_result = get_english_translation(text_input)
+        # Use the Seq2Seq translation function
+        translation_result, status = get_english_translation_seq2seq(text_input)
 
-        if "Translation error" in translation_result or "not available" in translation_result:
+        if status == 'error':
             return jsonify({'error': translation_result, 'status': 'error'}), 500
 
         return jsonify({'translation': translation_result, 'status': 'completed'})
