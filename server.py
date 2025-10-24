@@ -349,6 +349,26 @@ def translate():
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
 
+@app.route('/translate-halegannada', methods=['POST'])
+def translate_halegannada():
+    try:
+        data = request.json
+        text_input = data.get('text', '')
+        if not text_input:
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+
+        translation_result = get_english_translation(text_input)
+
+        if "Translation error" in translation_result or "not available" in translation_result:
+            return jsonify({'error': translation_result, 'status': 'error'}), 500
+
+        return jsonify({'translation': translation_result, 'status': 'completed'})
+    except Exception as e:
+        error_msg = f"Halegannada translation endpoint error: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
+
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
     # This is mainly for the Dictionary.pkl, but good practice.
