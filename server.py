@@ -354,20 +354,20 @@ def translate_halegannada():
     try:
         data = request.json
         text_input = data.get('text', '')
-
         if not text_input:
-            return jsonify({'error': 'No text provided'}), 400
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        translation = get_english_translation(text_input)
+        translation_result = get_english_translation(text_input)
 
-        if "error" in translation.lower():
-             return jsonify({'error': translation}), 500
+        if "Translation error" in translation_result or "not available" in translation_result:
+            return jsonify({'error': translation_result, 'status': 'error'}), 500
 
-        return jsonify({'translation': translation})
+        return jsonify({'translation': translation_result, 'status': 'completed'})
     except Exception as e:
-        print(f"Error in /translate-halegannada: {e}")
+        error_msg = f"Halegannada translation endpoint error: {str(e)}"
+        print(error_msg)
         traceback.print_exc()
-        return jsonify({'error': 'An unexpected error occurred'}), 500
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
 
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
