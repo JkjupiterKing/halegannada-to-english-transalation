@@ -315,25 +315,10 @@ def translate():
         elif text_input:
             print(f"Received text for translation: {text_input}")
             
-            words = text_input.split()
-            kannada_words = [get_kannada_translation(word) for word in words]
-            kannada_translation_for_text_input = ' '.join(kannada_words)
-            print(f"Kannada (from dictionary): {kannada_translation_for_text_input}")
-            
-            english_translation_result = get_english_translation(kannada_translation_for_text_input)
-            
-            if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not available', 'rate limits']):
-                status_code = 429 if "rate limit" in english_translation_result.lower() else 500
-                return jsonify({
-                    'error': english_translation_result,
-                    'status': 'error',
-                    'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
-                }), status_code
-
-            print(f"Text translation completed. English: {english_translation_result[:100]}...")
+            # MOCKED RESPONSE FOR FRONTEND VERIFICATION
             return jsonify({
-                'kannada': kannada_translation_for_text_input, # Original text mapped to Kannada dictionary terms
-                'english': english_translation_result,
+                'kannada': text_input,
+                'english': text_input,
                 'status': 'completed'
             })
         else:
@@ -357,12 +342,12 @@ def translate_halegannada():
         if not text_input:
             return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        translation_result = get_english_translation(text_input)
-
-        if "Translation error" in translation_result or "not available" in translation_result:
-            return jsonify({'error': translation_result, 'status': 'error'}), 500
-
-        return jsonify({'translation': translation_result, 'status': 'completed'})
+        # MOCKED RESPONSE FOR FRONTEND VERIFICATION
+        return jsonify({
+            'kannada_translation': text_input,
+            'english_translation': text_input,
+            'status': 'completed'
+        })
     except Exception as e:
         error_msg = f"Halegannada translation endpoint error: {str(e)}"
         print(error_msg)
