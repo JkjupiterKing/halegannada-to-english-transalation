@@ -16,109 +16,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <style>
-      :root {
-        --primary-red: #ff6b6b;
-        --primary-yellow: #ffd93d;
-        --text-dark: #333;
-      }
-
-      body {
-        font-family: "Noto Sans Kannada", sans-serif;
-        background-color: #fff9f0;
-      }
-
-      .navbar {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        padding: 1rem 2rem;
-      }
-
-      .navbar-brand,
-      .nav-link {
-        color: white !important;
-        font-weight: 600;
-      }
-
-      .nav-link:hover {
-        color: #ffe5e5 !important;
-      }
-
-      .translation-container {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 2rem auto;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        max-width: 900px;
-      }
-
-      .input-area,
-      .output-area {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .btn-translate {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: transform 0.3s ease;
-      }
-
-      .btn-translate:hover {
-        transform: translateY(-2px);
-      }
-
-      .btn-audio {
-        background: none;
-        border: 2px solid var(--primary-red);
-        color: var(--primary-red);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      .btn-audio:hover {
-        background: var(--primary-red);
-        color: white;
-      }
-
-      @media (max-width: 768px) {
-        .translation-container {
-          margin: 1rem;
-          padding: 1rem;
-        }
-
-        .navbar-collapse {
-          background: rgba(255, 255, 255, 0.95);
-          padding: 1rem;
-          border-radius: 10px;
-          margin-top: 1rem;
-        }
-
-        .nav-link {
-          color: var(--text-dark) !important;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css" />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg">
@@ -191,6 +89,22 @@
         </div>
 
         <div class="output-area">
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <label class="form-label mb-0">ಹೊಸಗನ್ನಡ (Osa Kannada):</label>
+              <button
+                class="btn-audio"
+                onclick="speak(document.getElementById('kannadaOutput').textContent, 'kn-IN', this)"
+                title="Listen to Kannada translation"
+              >
+                <i class="fas fa-volume-up"></i>
+              </button>
+            </div>
+            <div id="kannadaOutput" class="p-3 bg-white rounded">
+              Your Kannada translation will appear here...
+            </div>
+          </div>
+
           <div>
             <div class="d-flex justify-content-between align-items-center mb-3">
               <label class="form-label mb-0">English Translation:</label>
@@ -219,6 +133,7 @@
         if (!inputText) return;
 
         // Show loading state
+        document.getElementById("kannadaOutput").textContent = "Translating...";
         document.getElementById("englishOutput").textContent = "Translating...";
 
         try {
@@ -238,10 +153,14 @@
           }
 
           // Update translations in the UI
+          document.getElementById("kannadaOutput").textContent =
+            data.kannada_translation || "Translation not available";
           document.getElementById("englishOutput").textContent =
-            data.translation || "Translation not available";
+            data.english_translation || "Translation not available";
         } catch (error) {
           console.error("Translation error:", error);
+          document.getElementById("kannadaOutput").textContent =
+            "Error: Could not translate text";
           document.getElementById("englishOutput").textContent =
             "Error: Could not translate text";
         }

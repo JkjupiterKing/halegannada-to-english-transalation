@@ -3,3 +3,5 @@ flask-cors
 google-generativeai
 openai
 Pillow
+tensorflow
+keras

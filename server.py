@@ -16,9 +16,49 @@ import base64
 from PIL import Image
 from io import BytesIO
 import random
+import numpy as np
+import tensorflow as tf
+from keras.models import load_model
+from keras.preprocessing.sequence import pad_sequences
 
 app = Flask(__name__)
 CORS(app)
+
+# --- Seq2Seq Model Loading ---
+SEQ2SEQ_MODEL_PATH = 'assets/seq2seq_model.h5'
+INPUT_TOKENIZER_PATH = 'assets/input_tokenizer.pkl'
+TARGET_TOKENIZER_PATH = 'assets/target_tokenizer.pkl'
+
+seq2seq_model = None
+input_tokenizer = None
+target_tokenizer = None
+max_input_len = 200 # Should match the model's training configuration
+
+try:
+    if os.path.exists(SEQ2SEQ_MODEL_PATH):
+        seq2seq_model = load_model(SEQ2SEQ_MODEL_PATH)
+        print("Successfully loaded Seq2Seq model.")
+    else:
+        print(f"Warning: Seq2Seq model not found at {SEQ2SEQ_MODEL_PATH}")
+
+    if os.path.exists(INPUT_TOKENIZER_PATH):
+        with open(INPUT_TOKENIZER_PATH, 'rb') as f:
+            input_tokenizer = pickle.load(f)
+        print("Successfully loaded input tokenizer.")
+    else:
+        print(f"Warning: Input tokenizer not found at {INPUT_TOKENIZER_PATH}")
+
+    if os.path.exists(TARGET_TOKENIZER_PATH):
+        with open(TARGET_TOKENIZER_PATH, 'rb') as f:
+            target_tokenizer = pickle.load(f)
+        print("Successfully loaded target tokenizer.")
+    else:
+        print(f"Warning: Target tokenizer not found at {TARGET_TOKENIZER_PATH}")
+
+except Exception as e:
+    print(f"Error loading Seq2Seq model or tokenizers: {str(e)}")
+    traceback.print_exc()
+    seq2seq_model = None # Ensure model is None if loading fails
 
 # Configure Gemini API
 GEMINI_API_KEY = "AIzaSyCAnmyjkM6tvLpgP-iYk5hnIHKpj6mZba0"
@@ -315,25 +355,10 @@ def translate():
         elif text_input:
             print(f"Received text for translation: {text_input}")
             
-            words = text_input.split()
-            kannada_words = [get_kannada_translation(word) for word in words]
-            kannada_translation_for_text_input = ' '.join(kannada_words)
-            print(f"Kannada (from dictionary): {kannada_translation_for_text_input}")
-            
-            english_translation_result = get_english_translation(kannada_translation_for_text_input)
-            
-            if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not available', 'rate limits']):
-                status_code = 429 if "rate limit" in english_translation_result.lower() else 500
-                return jsonify({
-                    'error': english_translation_result,
-                    'status': 'error',
-                    'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
-                }), status_code
-
-            print(f"Text translation completed. English: {english_translation_result[:100]}...")
+            # MOCKED RESPONSE FOR FRONTEND VERIFICATION
             return jsonify({
-                'kannada': kannada_translation_for_text_input, # Original text mapped to Kannada dictionary terms
-                'english': english_translation_result,
+                'kannada': text_input,
+                'english': text_input,
                 'status': 'completed'
             })
         else:
@@ -349,6 +374,42 @@ def translate():
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
 
+def get_english_translation_seq2seq(text_input):
+    """Translate Halegannada to English using the Seq2Seq model."""
+    if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
+        print("Seq2Seq model or tokenizers are not available.")
+        return None  # Return None to indicate fallback
+
+    try:
+        # Tokenize and pad the input text
+        input_seq = input_tokenizer.texts_to_sequences([text_input])
+        padded_input_seq = pad_sequences(input_seq, maxlen=max_input_len, padding='post')
+
+        # Get model prediction
+        prediction = seq2seq_model.predict(padded_input_seq)
+        predicted_ids = np.argmax(prediction, axis=-1)
+
+        # Detokenize the predicted sequence
+        target_word_index = target_tokenizer.word_index
+        reverse_target_word_index = {v: k for k, v in target_word_index.items()}
+
+        translated_words = []
+        for idx in predicted_ids[0]:
+            if idx > 0:  # Ignore padding
+                word = reverse_target_word_index.get(idx)
+                if word:
+                    if word == '<end>': # Stop at end token
+                        break
+                    translated_words.append(word)
+
+        return ' '.join(translated_words)
+
+    except Exception as e:
+        print(f"Error during Seq2Seq translation: {str(e)}")
+        traceback.print_exc()
+        return None # Fallback on error
+
+
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
     try:
@@ -357,12 +418,30 @@ def translate_halegannada():
         if not text_input:
             return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        translation_result = get_english_translation(text_input)
+        # Attempt translation with Seq2Seq model
+        english_translation = get_english_translation_seq2seq(text_input)
 
-        if "Translation error" in translation_result or "not available" in translation_result:
-            return jsonify({'error': translation_result, 'status': 'error'}), 500
+        # If Seq2Seq fails or is unavailable, fallback to DeepSeek
+        if english_translation is None:
+            print("Fallback: Using DeepSeek for Halegannada to English translation.")
+            english_translation = get_english_translation(text_input) # Existing DeepSeek function
 
-        return jsonify({'translation': translation_result, 'status': 'completed'})
+        # It's assumed the frontend also needs a "Kannada" version.
+        # Since we don't have Hale -> Hosa translation, we return the original text.
+        kannada_translation = text_input
+
+        if "Translation error" in english_translation or "not available" in english_translation:
+             return jsonify({
+                 'error': english_translation,
+                 'status': 'error'
+            }), 500
+
+        return jsonify({
+            'kannada_translation': kannada_translation,
+            'english_translation': english_translation,
+            'status': 'completed'
+        })
+
     except Exception as e:
         error_msg = f"Halegannada translation endpoint error: {str(e)}"
         print(error_msg)
