@@ -320,75 +320,48 @@ def serve_assets(filename):
 @app.route('/translate', methods=['POST'])
 def translate():
     try:
-        print("\n=== New Translation Request ===")
         data = request.json
-        
         if not data:
-            print("Error: No data received")
-            return jsonify({'error': 'No data received', 'status': 'error'}), 400
-            
-        text_input = data.get('text', '')
-        image_data = data.get('image', '')
+            return jsonify({'error': 'No data received'}), 400
 
-        english_translation_result = ""
-        kannada_translation_for_text_input = "" # Only for text input path
+        text_input = data.get('text')
+        source = data.get('source') # 'dictionary' or general text
 
-        if image_data:
-            print("Image translation request received")
-            english_translation_result = process_image(image_data)
-            
-            # Check for error messages from process_image
-            if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not detected', 'unavailable']):
-                status_code = 429 if "rate limit" in english_translation_result.lower() else 500
-                return jsonify({
-                    'error': english_translation_result,
-                    'status': 'error',
-                    'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
-                }), status_code
-            
-            print(f"Image translation completed. Final English result: {english_translation_result[:100]}...")
-            return jsonify({
-                'english': english_translation_result,
-                'status': 'completed'
-            })
+        if not text_input:
+            return jsonify({'error': 'No text provided'}), 400
 
-        elif text_input:
-            print(f"Text translation request received: {text_input}")
-            
-            # Get Kannada translation (word by word from dictionary)
-            kannada_words = text_input.split()
-            translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
-            kannada_translation_for_text_input = ' '.join(translated_kannada_words)
-
-            # Get English translation
-            english_translation_result = get_english_translation(text_input)
-
-            print(f"Kannada Translation: {kannada_translation_for_text_input}")
-            print(f"English Translation: {english_translation_result}")
-
-            return jsonify({
-                'kannada': kannada_translation_for_text_input,
-                'english': english_translation_result,
-                'status': 'completed'
-            })
+        # Decide translation strategy based on the source
+        if source == 'dictionary':
+            # Use the dictionary for word-for-word lookup
+            print(f"Dictionary lookup for: {text_input}")
+            kannada_translation = get_kannada_translation(text_input)
         else:
-            return jsonify({'error': 'No text or image provided', 'status': 'error'}), 400
-    
+            # Use the more advanced Seq2Seq model for general text
+            print(f"General text translation (Seq2Seq) for: {text_input}")
+            kannada_translation = predict_with_seq2seq(text_input)
+
+        # Always get the English translation
+        english_translation = get_english_translation(text_input)
+
+        print(f"Kannada Translation: {kannada_translation}")
+        print(f"English Translation: {english_translation}")
+
+        return jsonify({
+            'kannada': kannada_translation,
+            'english': english_translation
+        })
+
     except Exception as e:
-        error_msg = f"General translation endpoint error: {str(e)}"
+        error_msg = f"Translation endpoint error: {str(e)}"
         print(error_msg)
         traceback.print_exc()
-        return jsonify({
-            'error': error_msg, 
-            'status': 'error',
-            'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
-        }), 500
+        return jsonify({'error': error_msg}), 500
 
-def get_english_translation_seq2seq(text_input):
-    """Translate Halegannada to English using the Seq2Seq model."""
+def predict_with_seq2seq(text_input):
+    """Translate Halegannada to Modern Kannada using the Seq2Seq model."""
     if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
         print("Seq2Seq model or tokenizers are not available.")
-        return None  # Return None to indicate fallback
+        return "Model not available"
 
     try:
         # Tokenize and pad the input text
@@ -400,8 +373,7 @@ def get_english_translation_seq2seq(text_input):
         predicted_ids = np.argmax(prediction, axis=-1)
 
         # Detokenize the predicted sequence
-        target_word_index = target_tokenizer.word_index
-        reverse_target_word_index = {v: k for k, v in target_word_index.items()}
+        reverse_target_word_index = {v: k for k, v in target_tokenizer.word_index.items()}
 
         translated_words = []
         for idx in predicted_ids[0]:
@@ -412,13 +384,12 @@ def get_english_translation_seq2seq(text_input):
                         break
                     translated_words.append(word)
 
-        return ' '.join(translated_words)
+        return ' '.join(translated_words) if translated_words else "Translation could not be generated"
 
     except Exception as e:
-        print(f"Error during Seq2Seq translation: {str(e)}")
+        print(f"Error during Seq2Seq prediction: {str(e)}")
         traceback.print_exc()
-        return None # Fallback on error
-
+        return "Error during translation"
 
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
@@ -426,35 +397,29 @@ def translate_halegannada():
         data = request.json
         text_input = data.get('text', '')
         if not text_input:
-            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+            return jsonify({'error': 'No text provided'}), 400
 
-        # This endpoint is more specific, let's assume it might have different logic or models in the future.
-        # For now, it will also use the dictionary for Kannada and DeepSeek for English.
+        print(f"Seq2Seq translation request for: {text_input}")
 
-        print(f"Halegannada translation request received: {text_input}")
+        # Use the Seq2Seq model for Halegannada to Hosa Kannada translation
+        kannada_translation = predict_with_seq2seq(text_input)
 
-        # Get Kannada translation (word by word from dictionary)
-        kannada_words = text_input.split()
-        translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
-        kannada_translation = ' '.join(translated_kannada_words)
-
-        # Get English translation
+        # Also get the English translation using the existing function
         english_translation = get_english_translation(text_input)
 
-        print(f"Kannada Translation: {kannada_translation}")
+        print(f"Seq2Seq Kannada Translation: {kannada_translation}")
         print(f"English Translation: {english_translation}")
 
         return jsonify({
             'kannada_translation': kannada_translation,
-            'english_translation': english_translation,
-            'status': 'completed'
+            'english_translation': english_translation
         })
 
     except Exception as e:
         error_msg = f"Halegannada translation endpoint error: {str(e)}"
         print(error_msg)
         traceback.print_exc()
-        return jsonify({'error': error_msg, 'status': 'error'}), 500
+        return jsonify({'error': error_msg}), 500
 
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
