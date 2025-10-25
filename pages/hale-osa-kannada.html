@@ -16,129 +16,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <style>
-      :root {
-        --primary-red: #ff6b6b;
-        --primary-yellow: #ffd93d;
-        --text-dark: #333;
-      }
-
-      body {
-        font-family: "Noto Sans Kannada", sans-serif;
-        background-color: #fff9f0;
-      }
-
-      .navbar {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        padding: 1rem 2rem;
-      }
-
-      .navbar-brand,
-      .nav-link {
-        color: white !important;
-        font-weight: 600;
-      }
-
-      .nav-link:hover {
-        color: #ffe5e5 !important;
-      }
-
-      .translation-container {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 2rem auto;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        max-width: 900px;
-      }
-
-      .input-area,
-      .output-area {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .btn-translate {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: transform 0.3s ease;
-      }
-
-      .btn-translate:hover {
-        transform: translateY(-2px);
-      }
-
-      .btn-audio {
-        background: none;
-        border: 2px solid var(--primary-red);
-        color: var(--primary-red);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      .btn-audio:hover {
-        background: var(--primary-red);
-        color: white;
-      }
-
-      .word-history {
-        margin-top: 2rem;
-        padding-top: 2rem;
-        border-top: 1px solid #ddd;
-      }
-
-      .history-item {
-        background: #f8f9fa;
-        border-radius: 8px;
-        padding: 1rem;
-        margin-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .history-item:hover {
-        background: #f0f0f0;
-      }
-
-      @media (max-width: 768px) {
-        .translation-container {
-          margin: 1rem;
-          padding: 1rem;
-        }
-
-        .navbar-collapse {
-          background: rgba(255, 255, 255, 0.95);
-          padding: 1rem;
-          border-radius: 10px;
-          margin-top: 1rem;
-        }
-
-        .nav-link {
-          color: var(--text-dark) !important;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css" />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg">
@@ -189,7 +67,7 @@
             <label class="form-label mb-0">Enter Halegannada Word:</label>
             <button
               class="btn-audio"
-              onclick="speakHalegannada()"
+              onclick="speakHalegannada(this)"
               title="Listen to Halegannada"
             >
               <i class="fas fa-volume-up"></i>
@@ -213,7 +91,7 @@
             <label class="form-label mb-0">Translation:</label>
             <button
               class="btn-audio"
-              onclick="speakTranslation()"
+              onclick="speakTranslation(this)"
               title="Listen to translation"
             >
               <i class="fas fa-volume-up"></i>
@@ -234,25 +112,19 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/speech.js"></script>
     <script>
-      // Text-to-speech functionality
-      function speakText(text, lang = "kn-IN") {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        window.speechSynthesis.speak(utterance);
-      }
-
-      function speakHalegannada() {
+      function speakHalegannada(buttonElement) {
         const text = document.getElementById("inputWord").value;
         if (text) {
-          speakText(text);
+          speak(text, "kn-IN", buttonElement);
         }
       }
 
-      function speakTranslation() {
+      function speakTranslation(buttonElement) {
         const text = document.getElementById("translationOutput").textContent;
         if (text && text !== "Your translation will appear here...") {
-          speakText(text, "en-US");
+          speak(text, "kn-IN", buttonElement);
         }
       }
 
@@ -276,7 +148,7 @@
                     <div>
                         <strong>${item.original}</strong> → ${item.translated}
                     </div>
-                    <button class="btn-audio" onclick="speakText('${item.original}')" title="Listen">
+                    <button class="btn-audio" onclick="speak('${item.original}', 'kn-IN', this)" title="Listen">
                         <i class="fas fa-volume-up"></i>
                     </button>
                 </div>

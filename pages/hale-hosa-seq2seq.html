@@ -16,109 +16,7 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
-    <style>
-      :root {
-        --primary-red: #ff6b6b;
-        --primary-yellow: #ffd93d;
-        --text-dark: #333;
-      }
-
-      body {
-        font-family: "Noto Sans Kannada", sans-serif;
-        background-color: #fff9f0;
-      }
-
-      .navbar {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        padding: 1rem 2rem;
-      }
-
-      .navbar-brand,
-      .nav-link {
-        color: white !important;
-        font-weight: 600;
-      }
-
-      .nav-link:hover {
-        color: #ffe5e5 !important;
-      }
-
-      .translation-container {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        margin: 2rem auto;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        max-width: 900px;
-      }
-
-      .input-area,
-      .output-area {
-        background: #f8f9fa;
-        border-radius: 10px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .btn-translate {
-        background: linear-gradient(
-          135deg,
-          var(--primary-red),
-          var(--primary-yellow)
-        );
-        color: white;
-        border: none;
-        padding: 0.8rem 2rem;
-        border-radius: 25px;
-        font-weight: 600;
-        transition: transform 0.3s ease;
-      }
-
-      .btn-translate:hover {
-        transform: translateY(-2px);
-      }
-
-      .btn-audio {
-        background: none;
-        border: 2px solid var(--primary-red);
-        color: var(--primary-red);
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        padding: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      .btn-audio:hover {
-        background: var(--primary-red);
-        color: white;
-      }
-
-      @media (max-width: 768px) {
-        .translation-container {
-          margin: 1rem;
-          padding: 1rem;
-        }
-
-        .navbar-collapse {
-          background: rgba(255, 255, 255, 0.95);
-          padding: 1rem;
-          border-radius: 10px;
-          margin-top: 1rem;
-        }
-
-        .nav-link {
-          color: var(--text-dark) !important;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="../assets/css/style.css" />
   </head>
   <body>
     <nav class="navbar navbar-expand-lg">
@@ -211,66 +109,21 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/speech.js"></script>
     <script>
-      // Text-to-speech functionality
-      let currentUtterance = null;
-      let speakingButton = null;
-
-      function speakText(text, lang = "kn-IN", buttonElement) {
-        if (window.speechSynthesis.speaking && currentUtterance) {
-          window.speechSynthesis.cancel();
-          if (speakingButton) {
-            speakingButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-          }
-          if (speakingButton === buttonElement) {
-            // If the same button is clicked again
-            currentUtterance = null;
-            speakingButton = null;
-            return; // Stop here, don't start new speech
-          }
-        }
-
-        // If a different button is clicked or no speech is active
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        currentUtterance = utterance;
-        speakingButton = buttonElement;
-        speakingButton.innerHTML = '<i class="fas fa-stop"></i>'; // Change to stop icon
-
-        utterance.onend = () => {
-          if (speakingButton) {
-            speakingButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Revert icon on end
-          }
-          currentUtterance = null;
-          speakingButton = null;
-        };
-
-        utterance.onerror = (event) => {
-          console.error("Speech synthesis error:", event.error);
-          if (speakingButton) {
-            speakingButton.innerHTML = '<i class="fas fa-volume-up"></i>'; // Revert icon on error
-          }
-          currentUtterance = null;
-          speakingButton = null;
-        };
-
-        window.speechSynthesis.speak(utterance);
-      }
-
       function speakHalegannada(buttonElement) {
         const text = document.getElementById("inputText").value;
         if (text) {
-          speakText(text, "kn-IN", buttonElement); // Assuming Halegannada can be spoken with kn-IN
+          speak(text, "kn-IN", buttonElement);
         }
       }
 
       function speakEnglish(buttonElement) {
         const text = document.getElementById("englishOutput").textContent;
         if (text && text !== "Your English translation will appear here...") {
-          speakText(text, "en-US", buttonElement);
+          speak(text, "en-US", buttonElement);
         }
       }
-
       async function translateText() {
         const inputText = document.getElementById("inputText").value.trim();
         if (!inputText) return;

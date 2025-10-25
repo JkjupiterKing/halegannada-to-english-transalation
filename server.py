@@ -1,5 +1,6 @@
 import sys
 import io
+print("Starting server.py")
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
@@ -42,12 +43,16 @@ def exponential_backoff(attempt):
 def retry_with_backoff(func, *args, **kwargs):
     """Retry function with exponential backoff"""
     last_exception = None
-    
+    print("Entering retry_with_backoff")
     for attempt in range(MAX_RETRIES):
         try:
-            return func(*args, **kwargs)
+            print(f"Attempt {attempt + 1}/{MAX_RETRIES}")
+            result = func(*args, **kwargs)
+            print("Function call successful")
+            return result
         except Exception as e:
             last_exception = e
+            print(f"Exception in attempt {attempt + 1}: {e}")
             
             # Check if it's a quota error (common for HTTP 429)
             # For DeepSeek/OpenAI, APIError often includes status codes
@@ -65,6 +70,7 @@ def retry_with_backoff(func, *args, **kwargs):
                 print(f"Non-retryable API error: {str(e)}")
                 raise e
     
+    print("Exiting retry_with_backoff after max retries")
     raise Exception(f"Max retries ({MAX_RETRIES}) exceeded. Last error: {str(last_exception)}")
 
 # Initialize the Gemini model - using the latest pro model that supports vision
