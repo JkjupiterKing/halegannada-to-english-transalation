@@ -184,7 +184,7 @@
             <label class="form-label mb-0">Enter Halegannada Text:</label>
             <button
               class="btn-audio"
-              onclick="speak(document.getElementById('inputText').value, 'kn-IN', this)"
+              onclick="speakText(document.getElementById('inputText').value, 'kn-IN', this)"
               title="Listen to Halegannada"
             >
               <i class="fas fa-volume-up"></i>
@@ -222,7 +222,7 @@
               <label class="form-label mb-0">ಹೊಸಗನ್ನಡ (Osa Kannada):</label>
               <button
                 class="btn-audio"
-                onclick="speak(document.getElementById('kannadaOutput').textContent, 'kn-IN', this)"
+                onclick="speakText(document.getElementById('kannadaOutput').textContent, 'kn-IN', this)"
                 title="Listen to Kannada translation"
               >
                 <i class="fas fa-volume-up"></i>
@@ -238,7 +238,7 @@
               <label class="form-label mb-0">English Translation:</label>
               <button
                 class="btn-audio"
-                onclick="speak(document.getElementById('englishOutput').textContent, 'en-US', this)"
+                onclick="speakText(document.getElementById('englishOutput').textContent, 'en-US', this)"
                 title="Listen to English translation"
               >
                 <i class="fas fa-volume-up"></i>
