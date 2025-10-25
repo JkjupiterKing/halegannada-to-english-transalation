@@ -354,11 +354,22 @@ def translate():
 
         elif text_input:
             print(f"Received text for translation: {text_input}")
-            
-            # MOCKED RESPONSE FOR FRONTEND VERIFICATION
+            source = data.get('source', 'default')
+
+            if source == 'dictionary':
+                kannada_translation = get_kannada_translation(text_input)
+                # English translation for the dictionary word might be useful for some clients,
+                # though the current Hale-Osa page doesn't use it.
+                english_translation = get_english_translation(kannada_translation)
+            else:
+                # For general text, we don't have a direct Halegannada -> Hosagannada model
+                # on this endpoint, so we return the original text for the Kannada field.
+                kannada_translation = text_input
+                english_translation = get_english_translation(text_input)
+
             return jsonify({
-                'kannada': text_input,
-                'english': text_input,
+                'kannada': kannada_translation,
+                'english': english_translation,
                 'status': 'completed'
             })
         else:
@@ -430,10 +441,11 @@ def translate_halegannada():
         # Since we don't have Hale -> Hosa translation, we return the original text.
         kannada_translation = text_input
 
-        if "Translation error" in english_translation or "not available" in english_translation:
-             return jsonify({
-                 'error': english_translation,
-                 'status': 'error'
+        if "Translation error" in english_translation or "not available" in english_translation or "failed" in english_translation:
+            return jsonify({
+                'kannada_translation': 'Error: Translation service is unavailable.',
+                'english_translation': 'Error: Translation service is unavailable.',
+                'status': 'error'
             }), 500
 
         return jsonify({
