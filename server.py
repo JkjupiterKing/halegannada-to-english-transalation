@@ -239,23 +239,27 @@ def process_image(image_data):
         traceback.print_exc()
         return f"Overall error in process_image: {str(e)}"
 
-def get_kannada_translation(word):
-    """Get Kannada translation from Dictionary.pkl"""
+def get_kannada_translation(text):
+    """Get Kannada translation from Dictionary.pkl by translating word by word."""
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         dictionary_path = os.path.join(current_dir, 'assets', 'Dictionary.pkl')
         
         if not os.path.exists(dictionary_path):
             print(f"Error: Dictionary.pkl not found at {dictionary_path}")
-            return word # Return original word if dictionary is missing
+            return text
             
         with open(dictionary_path, 'rb') as f:
             meanings = pickle.load(f)
-            return meanings.get(word, word)
+
+        # Translate word by word
+        translated_words = [meanings.get(word, word) for word in text.split()]
+        return ' '.join(translated_words)
+
     except Exception as e:
-        print(f"Error loading dictionary: {e}")
+        print(f"Error loading dictionary or translating: {e}")
         traceback.print_exc()
-        return word
+        return text
 
 def get_hosa_kannada_translation_api(text_to_translate):
     """Get Hosa Kannada translation using DeepSeek via OpenRouter API"""
@@ -400,9 +404,13 @@ def translate():
 
         elif text_input:
             print(f"Text translation request received: {text_input}")
+            source = data.get('source')
             
             # Get Kannada translation using the new API function
-            kannada_translation_for_text_input = get_hosa_kannada_translation_api(text_input)
+            if source == 'dictionary':
+                kannada_translation_for_text_input = get_kannada_translation(text_input)
+            else:
+                kannada_translation_for_text_input = get_hosa_kannada_translation_api(text_input)
 
             # Get English translation
             english_translation_result = get_english_translation(text_input)
