@@ -313,12 +313,22 @@ def translate():
             })
 
         elif text_input:
-            print(f"Received text for translation: {text_input}")
+            print(f"Text translation request received: {text_input}")
             
-            # MOCKED RESPONSE FOR FRONTEND VERIFICATION
+            # Get Kannada translation (word by word from dictionary)
+            kannada_words = text_input.split()
+            translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
+            kannada_translation_for_text_input = ' '.join(translated_kannada_words)
+
+            # Get English translation
+            english_translation_result = get_english_translation(text_input)
+
+            print(f"Kannada Translation: {kannada_translation_for_text_input}")
+            print(f"English Translation: {english_translation_result}")
+
             return jsonify({
-                'kannada': text_input,
-                'english': text_input,
+                'kannada': kannada_translation_for_text_input,
+                'english': english_translation_result,
                 'status': 'completed'
             })
         else:
@@ -342,10 +352,25 @@ def translate_halegannada():
         if not text_input:
             return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        # MOCKED RESPONSE FOR FRONTEND VERIFICATION
+        # This endpoint is more specific, let's assume it might have different logic or models in the future.
+        # For now, it will also use the dictionary for Kannada and DeepSeek for English.
+
+        print(f"Halegannada translation request received: {text_input}")
+
+        # Get Kannada translation (word by word from dictionary)
+        kannada_words = text_input.split()
+        translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
+        kannada_translation = ' '.join(translated_kannada_words)
+
+        # Get English translation
+        english_translation = get_english_translation(text_input)
+
+        print(f"Kannada Translation: {kannada_translation}")
+        print(f"English Translation: {english_translation}")
+
         return jsonify({
-            'kannada_translation': text_input,
-            'english_translation': text_input,
+            'kannada_translation': kannada_translation,
+            'english_translation': english_translation,
             'status': 'completed'
         })
     except Exception as e:
