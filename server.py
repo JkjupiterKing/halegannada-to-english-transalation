@@ -20,6 +20,8 @@ import numpy as np
 import tensorflow as tf
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
+import sys
+sys.stdout.reconfigure(line_buffering=True)
 
 app = Flask(__name__)
 CORS(app)
