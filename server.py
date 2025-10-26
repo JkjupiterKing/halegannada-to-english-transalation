@@ -26,6 +26,23 @@ sys.stdout.reconfigure(line_buffering=True)
 app = Flask(__name__)
 CORS(app)
 
+# --- Dictionary Loading ---
+DICTIONARY_PATH = 'assets/Dictionary.pkl'
+kannada_dictionary = None
+try:
+    if os.path.exists(DICTIONARY_PATH):
+        with open(DICTIONARY_PATH, 'rb') as f:
+            raw_dictionary = pickle.load(f)
+            # Strip whitespace from all dictionary values to prevent assertion errors
+            kannada_dictionary = {k: v.strip() for k, v in raw_dictionary.items()}
+        print("Successfully loaded and processed Kannada dictionary.")
+    else:
+        print(f"Warning: Kannada dictionary not found at {DICTIONARY_PATH}")
+except Exception as e:
+    print(f"Error loading Kannada dictionary: {str(e)}")
+    traceback.print_exc()
+    kannada_dictionary = None
+
 # --- Seq2Seq Model Loading ---
 SEQ2SEQ_MODEL_PATH = 'assets/seq2seq_model.h5'
 INPUT_TOKENIZER_PATH = 'assets/input_tokenizer.pkl'
@@ -242,22 +259,13 @@ def process_image(image_data):
         return f"Overall error in process_image: {str(e)}"
 
 def get_kannada_translation(word):
-    """Get Kannada translation from Dictionary.pkl"""
-    try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        dictionary_path = os.path.join(current_dir, 'assets', 'Dictionary.pkl')
-        
-        if not os.path.exists(dictionary_path):
-            print(f"Error: Dictionary.pkl not found at {dictionary_path}")
-            return word # Return original word if dictionary is missing
-            
-        with open(dictionary_path, 'rb') as f:
-            meanings = pickle.load(f)
-            return meanings.get(word, word)
-    except Exception as e:
-        print(f"Error loading dictionary: {e}")
-        traceback.print_exc()
-        return word
+    """Get Kannada translation from the in-memory dictionary."""
+    if kannada_dictionary:
+        # Return the translation if found, otherwise return None to signal fallback
+        return kannada_dictionary.get(word)
+    else:
+        print("Warning: Kannada dictionary is not loaded.")
+        return None # Signal fallback if dictionary is missing
 
 def get_english_translation(text_to_translate):
     """Get English translation using DeepSeek via OpenRouter API"""
@@ -344,7 +352,8 @@ def get_hosa_kannada_translation_api(text_to_translate):
     except Exception as e:
         error_message = f"OpenRouter (DeepSeek) Hosa Kannada translation error after retries: {str(e)}"
         print(error_message)
-        return "Hosa Kannada translation error: API unavailable or failed"
+        # Return a specific error code that can be checked by the caller
+        return "API_TRANSLATION_FAILED"
 
 @app.route('/')
 def index():
@@ -399,10 +408,28 @@ def translate():
 
             # Conditional logic for Hosa Kannada translation
             if source == 'dictionary':
-                print("Using dictionary for Kannada translation.")
+                print("Using hybrid dictionary/API approach for Kannada translation.")
                 kannada_words = text_input.split()
-                translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
-                kannada_translation_result = ' '.join(translated_kannada_words)
+                translated_kannada_words = []
+
+                # Process each word individually
+                for word in kannada_words:
+                    # First, try the dictionary
+                    translation = get_kannada_translation(word)
+
+                    # If not in dictionary, try the API
+                    if translation is None:
+                        print(f"'{word}' not in dictionary, falling back to API.")
+                        translation = get_hosa_kannada_translation_api(word)
+
+                        # If API fails, use the placeholder
+                        if translation == "API_TRANSLATION_FAILED":
+                            print(f"API translation failed for '{word}'.")
+                            translation = f"[{word}: unavailable]"
+
+                    translated_kannada_words.append(translation)
+
+                kannada_translation_result = ' '.join(filter(None, translated_kannada_words))
             else:
                 print("Using API for Hosa Kannada translation.")
                 kannada_translation_result = get_hosa_kannada_translation_api(text_input)
