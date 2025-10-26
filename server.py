@@ -305,6 +305,45 @@ def get_english_translation(text_to_translate):
             return "Translation failed: Model not found on OpenRouter. Check model identifier."
         return f"Translation error: OpenRouter (DeepSeek) API unavailable or failed after retries."
 
+def get_hosa_kannada_translation_api(text_to_translate):
+    """Get Hosa Kannada translation using DeepSeek via OpenRouter API."""
+    if not text_to_translate:
+        return "No text provided for translation."
+    print(f"Attempting OpenRouter (DeepSeek) Hosa Kannada translation for: {text_to_translate[:100]}...")
+
+    def _translate_with_openrouter_deepseek():
+        try:
+            response = deepseek_client.chat.completions.create(
+                model="deepseek/deepseek-chat",
+                messages=[
+                    {"role": "system", "content": "You are an expert translator. Translate the given Halegannada (Old Kannada) text to Hosa Kannada (Modern Kannada). Provide only the direct translation."},
+                    {"role": "user", "content": f"Translate to Hosa Kannada:\n\n{text_to_translate}"}
+                ],
+                stream=False,
+                max_tokens=1000,
+                temperature=0.5
+            )
+            if response.choices and response.choices[0].message and response.choices[0].message.content:
+                translated_text = response.choices[0].message.content.strip()
+                print("OpenRouter (DeepSeek) Hosa Kannada translation successful.")
+                return translated_text
+            else:
+                print("OpenRouter (DeepSeek) API returned an empty or invalid response for Hosa Kannada translation.")
+                return "Hosa Kannada translation not available (empty response)"
+        except openai.APIError as e:
+            print(f"OpenRouter (DeepSeek) APIError for Hosa Kannada translation: {e.status_code} - {e.message}")
+            raise
+        except Exception as e:
+            print(f"Generic error during OpenRouter (DeepSeek) Hosa Kannada translation: {str(e)}")
+            raise
+
+    try:
+        return retry_with_backoff(_translate_with_openrouter_deepseek)
+    except Exception as e:
+        error_message = f"OpenRouter (DeepSeek) Hosa Kannada translation error after retries: {str(e)}"
+        print(error_message)
+        return "Hosa Kannada translation error: API unavailable or failed"
+
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
@@ -329,15 +368,16 @@ def translate():
             
         text_input = data.get('text', '')
         image_data = data.get('image', '')
+        source = data.get('source', 'api') # Default to 'api' if source not specified
 
         english_translation_result = ""
-        kannada_translation_for_text_input = "" # Only for text input path
+        kannada_translation_result = ""
 
         if image_data:
             print("Image translation request received")
+            # Image processing inherently uses APIs for OCR and translation, so it's not affected by the 'source' flag.
             english_translation_result = process_image(image_data)
-            
-            # Check for error messages from process_image
+
             if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not detected', 'unavailable']):
                 status_code = 429 if "rate limit" in english_translation_result.lower() else 500
                 return jsonify({
@@ -345,7 +385,7 @@ def translate():
                     'status': 'error',
                     'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
                 }), status_code
-            
+
             print(f"Image translation completed. Final English result: {english_translation_result[:100]}...")
             return jsonify({
                 'english': english_translation_result,
@@ -353,21 +393,26 @@ def translate():
             })
 
         elif text_input:
-            print(f"Text translation request received: {text_input}")
-            
-            # Get Kannada translation (word by word from dictionary)
-            kannada_words = text_input.split()
-            translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
-            kannada_translation_for_text_input = ' '.join(translated_kannada_words)
+            print(f"Text translation request received for '{text_input}' with source: {source}")
 
-            # Get English translation
+            # Conditional logic for Hosa Kannada translation
+            if source == 'dictionary':
+                print("Using dictionary for Kannada translation.")
+                kannada_words = text_input.split()
+                translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
+                kannada_translation_result = ' '.join(translated_kannada_words)
+            else:
+                print("Using API for Hosa Kannada translation.")
+                kannada_translation_result = get_hosa_kannada_translation_api(text_input)
+
+            # English translation is always done via API for text inputs
             english_translation_result = get_english_translation(text_input)
 
-            print(f"Kannada Translation: {kannada_translation_for_text_input}")
+            print(f"Kannada Translation: {kannada_translation_result}")
             print(f"English Translation: {english_translation_result}")
 
             return jsonify({
-                'kannada': kannada_translation_for_text_input,
+                'kannada': kannada_translation_result,
                 'english': english_translation_result,
                 'status': 'completed'
             })
