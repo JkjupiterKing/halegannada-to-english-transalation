@@ -67,7 +67,7 @@ GEMINI_API_KEY = "AIzaSyCAnmyjkM6tvLpgP-iYk5hnIHKpj6mZba0"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Configure DeepSeek API via OpenRouter
-DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
+DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
 deepseek_client = openai.OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 # Rate limiting and retry configuration
