@@ -174,9 +174,7 @@
 
           const data = await response.json();
           // The server, for "dictionary" source, should return the dictionary result in the 'kannada' field.
-          // Or, if we adjust server to return a single 'translation' field for this source, use data.translation.
-          // For now, assuming server sends {'kannada': ..., 'english': ...}, we want the 'kannada' part for dictionary lookup.
-          const translation = data.kannada; // <<<<<<<<<<<< KEY CHANGE HERE to use data.kannada
+          const translation = data.kannada;
 
           if (translation) {
             document.getElementById("translationOutput").textContent =

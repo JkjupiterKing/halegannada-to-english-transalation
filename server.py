@@ -242,27 +242,20 @@ def process_image(image_data):
         return f"Overall error in process_image: {str(e)}"
 
 def get_kannada_translation(word):
-    """Get Kannada translation from Dictionary.pkl. If a word is not found, it is returned as is."""
+    """Get Kannada translation from Dictionary.pkl"""
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         dictionary_path = os.path.join(current_dir, 'assets', 'Dictionary.pkl')
         
         if not os.path.exists(dictionary_path):
-            print(f"Warning: Dictionary.pkl not found at {dictionary_path}. Returning original words.")
-            return word
+            print(f"Error: Dictionary.pkl not found at {dictionary_path}")
+            return word # Return original word if dictionary is missing
             
         with open(dictionary_path, 'rb') as f:
             meanings = pickle.load(f)
-            translation = meanings.get(word)
-            if translation:
-                print(f"Translated '{word}' from dictionary.")
-                return translation
-            else:
-                print(f"'{word}' not in dictionary. Returning original word.")
-                return word
-
+            return meanings.get(word, word)
     except Exception as e:
-        print(f"Error during dictionary lookup for '{word}': {e}. Returning original word.")
+        print(f"Error loading dictionary: {e}")
         traceback.print_exc()
         return word
 
@@ -406,7 +399,7 @@ def translate():
 
             # Conditional logic for Hosa Kannada translation
             if source == 'dictionary':
-                print("Using dictionary-based translation for Kannada.")
+                print("Using dictionary for Kannada translation.")
                 kannada_words = text_input.split()
                 translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
                 kannada_translation_result = ' '.join(translated_kannada_words)
