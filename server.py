@@ -119,17 +119,14 @@ except Exception as e:
     gemini_model = None # Ensure it's None if init fails
 
 def process_image(image_data):
-    """
-    Process image data: extract Halegannada text using Gemini, then translate using DeepSeek.
-    Returns a tuple: (extracted_text, english_translation) or (error_message, None)
-    """
+    """Process image data: extract Halegannada text using Gemini, then translate using DeepSeek."""
     try:
         print("\n=== Starting Image Processing ===")
         print("Step 1: Checking image data...")
         
         if not image_data:
             print("Error: No image data received")
-            return "Error: No image data received", None
+            return "Error: No image data received"
             
         try:
             if isinstance(image_data, str):
@@ -141,10 +138,10 @@ def process_image(image_data):
                         print("Base64 conversion successful")
                     except Exception as e:
                         print(f"Base64 decode error: {str(e)}")
-                        return f"Error decoding image: {str(e)}", None
+                        return f"Error decoding image: {str(e)}"
                 else:
                     print("Error: Invalid image data format")
-                    return "Error: Invalid image data format", None
+                    return "Error: Invalid image data format"
             else:
                 image_bytes = image_data # Assuming it's already bytes
                 
@@ -154,7 +151,7 @@ def process_image(image_data):
                 print(f"Image opened successfully. Format: {image.format}, Size: {image.size}, Mode: {image.mode}")
             except Exception as e:
                 print(f"Error opening image: {str(e)}")
-                return f"Error opening image: {str(e)}", None
+                return f"Error opening image: {str(e)}"
             
             print("Step 3: Converting image format...")
             try:
@@ -163,7 +160,7 @@ def process_image(image_data):
                     print("Converted to RGB mode")
             except Exception as e:
                 print(f"Error converting image format: {str(e)}")
-                return f"Error converting image format: {str(e)}", None
+                return f"Error converting image format: {str(e)}"
             
             print("Step 4: Resizing image if needed...")
             try:
@@ -175,7 +172,7 @@ def process_image(image_data):
                     print(f"Image resized to {new_size}")
             except Exception as e:
                 print(f"Error resizing image: {str(e)}")
-                return f"Error resizing image: {str(e)}", None
+                return f"Error resizing image: {str(e)}"
 
             print("Step 5: Preparing for Gemini API to extract text...")
             gemini_ocr_prompt = """
@@ -188,11 +185,12 @@ def process_image(image_data):
             """
 
             if not gemini_model:
-                return "Error: Gemini model not initialized.", None
+                return "Error: Gemini model not initialized."
 
             print("Step 6: Calling Gemini API for OCR...")
             try:
                 img_byte_arr = BytesIO()
+                # Determine image format; default to JPEG if not available or unsupported by PIL for saving
                 save_format = image.format if image.format and image.format.upper() in ['JPEG', 'PNG', 'WEBP'] else 'JPEG'
                 mime_type = f'image/{save_format.lower()}'
                 
@@ -209,39 +207,39 @@ def process_image(image_data):
                 
                 if not gemini_response or not hasattr(gemini_response, 'text'):
                     print("Error: Invalid or empty response from Gemini OCR")
-                    return "Error: Could not extract text using Gemini", None
+                    return "Error: Could not extract text using Gemini"
                     
                 extracted_text = gemini_response.text.strip()
                 print(f"Text extracted by Gemini: {extracted_text[:200]}...")
 
                 if not extracted_text or "No Halegannada text detected" in extracted_text:
-                    return "No Halegannada text detected in image", None
+                    return "No Halegannada text detected in image"
                 
                 print("Step 7: Translating extracted text using DeepSeek API...")
-                english_translation = get_english_translation(extracted_text)
+                english_translation = get_english_translation(extracted_text) # This now uses DeepSeek
                 
                 if "Translation error" in english_translation or "not available" in english_translation:
                     print(f"DeepSeek translation failed for extracted text: {english_translation}")
-                    return extracted_text, "Error translating extracted text with DeepSeek"
+                    return "Error translating extracted text with DeepSeek"
 
                 print(f"DeepSeek Translation successful. Result: {english_translation[:100]}...")
-                return extracted_text, english_translation
+                return english_translation
                 
             except Exception as e:
                 print(f"Gemini API or subsequent DeepSeek call error: {str(e)}")
                 traceback.print_exc()
-                return f"Error during image processing pipeline: {str(e)}", None
+                return f"Error during image processing pipeline: {str(e)}"
 
-        except Exception as e:
+        except Exception as e: # Catches errors in image pre-processing
             print(f"Image pre-processing error: {str(e)}")
             traceback.print_exc()
-            return f"Image pre-processing error: {str(e)}", None
+            return f"Image pre-processing error: {str(e)}"
 
-    except Exception as e:
+    except Exception as e: # Broadest catch for any unexpected error in process_image
         print("\n=== Error in process_image ===")
         print(f"Error: {str(e)}")
         traceback.print_exc()
-        return f"Overall error in process_image: {str(e)}", None
+        return f"Overall error in process_image: {str(e)}"
 
 def get_kannada_translation(word):
     """Get Kannada translation from Dictionary.pkl"""
@@ -379,23 +377,20 @@ def translate():
 
         if image_data:
             print("Image translation request received")
-            extracted_text, english_translation = process_image(image_data)
+            # Image processing inherently uses APIs for OCR and translation, so it's not affected by the 'source' flag.
+            english_translation_result = process_image(image_data)
 
-            if english_translation is None or "error" in (extracted_text or "").lower():
-                # If translation failed or OCR reported an error
-                error_message = english_translation or extracted_text or "Unknown processing error"
-                status_code = 429 if "rate limit" in error_message.lower() else 500
+            if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not detected', 'unavailable']):
+                status_code = 429 if "rate limit" in english_translation_result.lower() else 500
                 return jsonify({
-                    'error': error_message,
+                    'error': english_translation_result,
                     'status': 'error',
                     'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
                 }), status_code
 
-            # Success case
-            print(f"Image processing completed. Extracted: '{extracted_text[:100]}...', Translated: '{english_translation[:100]}...'")
+            print(f"Image translation completed. Final English result: {english_translation_result[:100]}...")
             return jsonify({
-                'extracted_text': extracted_text,
-                'english': english_translation,
+                'english': english_translation_result,
                 'status': 'completed'
             })
 
