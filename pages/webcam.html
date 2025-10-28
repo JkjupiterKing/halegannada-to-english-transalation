@@ -13,7 +13,6 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../assets/css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg">
@@ -101,11 +100,37 @@
           });
       }
 
-      // Capture image and perform OCR
+      // A function to wait for the video to be ready
+      function waitForVideoReady() {
+          return new Promise((resolve, reject) => {
+              const checkVideo = () => {
+                  if (video.readyState >= 3 && video.videoWidth > 0 && video.videoHeight > 0) {
+                      console.log("Video is ready.");
+                      resolve();
+                  } else if (Date.now() > startTime + 5000) { // 5-second timeout
+                      console.error("Timeout waiting for video to become ready.");
+                      reject(new Error("Timeout waiting for video."));
+                  } else {
+                      requestAnimationFrame(checkVideo);
+                  }
+              };
+              const startTime = Date.now();
+              checkVideo();
+          });
+      }
+
+      // Capture image, send to server for OCR and translation
       captureBtn.addEventListener('click', async () => {
         ocrResult.innerText = 'Processing...';
         translationResult.innerText = '';
         capturedImage.src = '';
+
+        try {
+            await waitForVideoReady();
+        } catch (error) {
+            ocrResult.innerText = `Error: ${error.message}`;
+            return;
+        }
 
         // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
@@ -116,36 +141,34 @@
         const imageDataUrl = canvas.toDataURL('image/png');
         capturedImage.src = imageDataUrl;
 
-        // OCR with Tesseract
-        const { data: { text } } = await Tesseract.recognize(
-          imageDataUrl,
-          'kan', // Specify Kannada language
-          {
-            logger: m => console.log(m) // Log progress
-          }
-        );
+        try {
+          // Get just the base64 part
+          const base64Image = imageDataUrl.split(',')[1];
 
-        console.log('OCR Result:', text);
-        ocrResult.innerText = text || 'No text detected.';
-
-        if (text) {
-          // Translate the extracted text
+          // Send image to the server
           const response = await fetch('/translate', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              text: text,
-              source: 'dictionary'
+              image: base64Image,
             }),
           });
+
           const data = await response.json();
-          if (data.english) {
-            translationResult.innerText = data.english;
+
+          if (response.ok) {
+            ocrResult.innerText = data.extracted_text || 'No text detected.';
+            translationResult.innerText = data.english || 'Translation not available.';
           } else {
-            translationResult.innerText = 'Translation not available.';
+            ocrResult.innerText = `Error: ${data.error || 'Unknown server error'}`;
+            translationResult.innerText = 'Translation failed.';
           }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            ocrResult.innerText = 'An error occurred while communicating with the server.';
+            translationResult.innerText = '';
         }
       });
     </script>
