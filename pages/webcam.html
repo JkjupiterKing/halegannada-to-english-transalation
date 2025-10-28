@@ -101,51 +101,54 @@
           });
       }
 
-      // Capture image and perform OCR
+      // Capture image and send to server for processing
       captureBtn.addEventListener('click', async () => {
         ocrResult.innerText = 'Processing...';
         translationResult.innerText = '';
         capturedImage.src = '';
+        captureBtn.disabled = true;
 
-        // Set canvas dimensions to match video
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        try {
+            // Set canvas dimensions to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-        // Display captured image
-        const imageDataUrl = canvas.toDataURL('image/png');
-        capturedImage.src = imageDataUrl;
+            // Display captured image
+            const imageDataUrl = canvas.toDataURL('image/png');
+            capturedImage.src = imageDataUrl;
 
-        // OCR with Tesseract
-        const { data: { text } } = await Tesseract.recognize(
-          imageDataUrl,
-          'kan', // Specify Kannada language
-          {
-            logger: m => console.log(m) // Log progress
-          }
-        );
+            // Send image to the server
+            const response = await fetch('/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image: imageDataUrl,
+                }),
+            });
 
-        console.log('OCR Result:', text);
-        ocrResult.innerText = text || 'No text detected.';
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            }
 
-        if (text) {
-          // Translate the extracted text
-          const response = await fetch('/translate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text: text,
-              source: 'dictionary'
-            }),
-          });
-          const data = await response.json();
-          if (data.english) {
-            translationResult.innerText = data.english;
-          } else {
-            translationResult.innerText = 'Translation not available.';
-          }
+            const data = await response.json();
+
+            if (data.status === 'completed') {
+                ocrResult.innerText = data.extracted_text || 'No text detected.';
+                translationResult.innerText = data.english || 'Translation not available.';
+            } else {
+                 ocrResult.innerText = data.error || 'An unknown error occurred.';
+                 translationResult.innerText = 'Translation failed.';
+            }
+        } catch (error) {
+            console.error('Error during processing:', error);
+            ocrResult.innerText = `Error: ${error.message}`;
+            translationResult.innerText = 'Failed to get translation.';
+        } finally {
+            captureBtn.disabled = false;
         }
       });
     </script>
