@@ -21,10 +21,17 @@ import tensorflow as tf
 from keras.models import load_model
 from keras.preprocessing.sequence import pad_sequences
 import sys
+from gtts import gTTS
+import os
+import uuid
 sys.stdout.reconfigure(line_buffering=True)
 
 app = Flask(__name__)
 CORS(app)
+
+# Use your assets folder
+AUDIO_DIR = "assets/audio"
+os.makedirs(AUDIO_DIR, exist_ok=True)
 
 # --- Seq2Seq Model Loading ---
 SEQ2SEQ_MODEL_PATH = 'assets/seq2seq_model.h5'
@@ -63,11 +70,13 @@ except Exception as e:
     seq2seq_model = None # Ensure model is None if loading fails
 
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyCAnmyjkM6tvLpgP-iYk5hnIHKpj6mZba0"
+# GEMINI_API_KEY = "AIzaSyB-UE5d4vnXhv9WdAL6_vTYqlp4inq0O7s" # Replace with your actual Gemini API key
+GEMINI_API_KEY = "Apikey"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Configure DeepSeek API via OpenRouter
-DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
+DEEPSEEK_API_KEY = "openaikey" # This is an OpenRouter key
+# DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
 deepseek_client = openai.OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 # Rate limiting and retry configuration
@@ -111,7 +120,7 @@ def retry_with_backoff(func, *args, **kwargs):
 
 # Initialize the Gemini model - using the latest pro model that supports vision
 try:
-    gemini_model = genai.GenerativeModel('gemini-1.5-pro-latest') # Renamed to gemini_model for clarity
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash') # Renamed to gemini_model for clarity
     print("Successfully initialized Gemini model")
 except Exception as e:
     print(f"Error initializing Gemini model: {str(e)}")
@@ -360,6 +369,7 @@ def serve_assets(filename):
 
 @app.route('/translate', methods=['POST'])
 def translate():
+  
     try:
         print("\n=== New Translation Request ===")
         data = request.json
@@ -374,6 +384,8 @@ def translate():
 
         english_translation_result = ""
         kannada_translation_result = ""
+
+        print(f"Received text: {text_input} | Source: {source}")
 
         if image_data:
             print("Image translation request received")
@@ -465,27 +477,72 @@ def get_english_translation_seq2seq(text_input):
         print(f"Error during Seq2Seq translation: {str(e)}")
         traceback.print_exc()
         return None # Fallback on error
+    
+
+@app.route("/speak", methods=["POST"])
+def speak():
+    data = request.json
+    hale_text = data.get("text", "").strip()
+    lang = data.get("lang", "kn").split("-")[0]  # 👈 this line fixes "kn-IN" 
+    
+    if not hale_text:
+        return jsonify({"error": "No text provided"}), 400
+
+    try:
+        # Example: Replace with your Halegannada → Hosa Kannada translation function
+        translated_text = hale_text
+
+        filename = f"{uuid.uuid4()}.mp3"
+        filepath = os.path.join(AUDIO_DIR, filename)
+
+        # Generate speech using gTTS (no API key or billing required)
+        tts = gTTS(text=translated_text, lang=lang)
+        tts.save(filepath)
+
+        # Return the file path as URL
+        audio_url = f"/assets/audio/{filename}"
+        return jsonify({
+            "audio_url": audio_url,
+            "translated_text": translated_text
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
+# Serve audio files from /assets/audio/
+@app.route("/assets/audio/<path:filename>")
+def serve_audio(filename):
+    return send_from_directory(AUDIO_DIR, filename)
+
+
+@app.route("/")
+def home():
+    return "✅ Free Text-to-Speech Server with assets/ is running"
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+# Hale-hosa kannada
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
     try:
         data = request.json
-        text_input = data.get('text', '')
+        text_input = data.get('text', '').strip()
+
         if not text_input:
             return jsonify({'error': 'No text provided', 'status': 'error'}), 400
 
-        # This endpoint is more specific, let's assume it might have different logic or models in the future.
-        # For now, it will also use the dictionary for Kannada and DeepSeek for English.
-
         print(f"Halegannada translation request received: {text_input}")
 
-        # Get Kannada translation (word by word from dictionary)
+        # ---- Kannada Translation ----
+        # Example: Split text and map via dictionary or rule-based model
         kannada_words = text_input.split()
         translated_kannada_words = [get_kannada_translation(word) for word in kannada_words]
         kannada_translation = ' '.join(translated_kannada_words)
 
-        # Get English translation
+        # ---- English Translation ----
         english_translation = get_english_translation(text_input)
 
         print(f"Kannada Translation: {kannada_translation}")
@@ -502,6 +559,7 @@ def translate_halegannada():
         print(error_msg)
         traceback.print_exc()
         return jsonify({'error': error_msg, 'status': 'error'}), 500
+
 
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.

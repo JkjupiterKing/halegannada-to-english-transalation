@@ -5,3 +5,10 @@ openai
 Pillow
 tensorflow
 keras
+
+pip install google-cloud-texttospeech
+
+
+pip install -U google-generativeai
+
+python -m pip install google-generativeai==0.8.5
