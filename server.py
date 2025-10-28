@@ -16,54 +16,23 @@ import base64
 from PIL import Image
 from io import BytesIO
 import random
-import numpy as np
-import tensorflow as tf
-from keras.models import load_model
-from keras.preprocessing.sequence import pad_sequences
 import sys
 sys.stdout.reconfigure(line_buffering=True)
 
 app = Flask(__name__)
 CORS(app)
 
-# --- Seq2Seq Model Loading ---
-SEQ2SEQ_MODEL_PATH = 'assets/seq2seq_model.h5'
-INPUT_TOKENIZER_PATH = 'assets/input_tokenizer.pkl'
-TARGET_TOKENIZER_PATH = 'assets/target_tokenizer.pkl'
-
-seq2seq_model = None
-input_tokenizer = None
-target_tokenizer = None
-max_input_len = 200 # Should match the model's training configuration
-
-try:
-    if os.path.exists(SEQ2SEQ_MODEL_PATH):
-        seq2seq_model = load_model(SEQ2SEQ_MODEL_PATH)
-        print("Successfully loaded Seq2Seq model.")
-    else:
-        print(f"Warning: Seq2Seq model not found at {SEQ2SEQ_MODEL_PATH}")
-
-    if os.path.exists(INPUT_TOKENIZER_PATH):
-        with open(INPUT_TOKENIZER_PATH, 'rb') as f:
-            input_tokenizer = pickle.load(f)
-        print("Successfully loaded input tokenizer.")
-    else:
-        print(f"Warning: Input tokenizer not found at {INPUT_TOKENIZER_PATH}")
-
-    if os.path.exists(TARGET_TOKENIZER_PATH):
-        with open(TARGET_TOKENIZER_PATH, 'rb') as f:
-            target_tokenizer = pickle.load(f)
-        print("Successfully loaded target tokenizer.")
-    else:
-        print(f"Warning: Target tokenizer not found at {TARGET_TOKENIZER_PATH}")
-
-except Exception as e:
-    print(f"Error loading Seq2Seq model or tokenizers: {str(e)}")
-    traceback.print_exc()
-    seq2seq_model = None # Ensure model is None if loading fails
-
 # Configure Gemini API
-GEMINI_API_KEY = "AIzaSyCAnmyjkM6tvLpgP-iYk5hnIHKpj6mZba0"
+# --- Security Best Practice: Load API key from environment variable ---
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+# It's critical to check if the key was actually loaded.
+if not GEMINI_API_KEY:
+    # This error will be printed to the console when the server starts.
+    print("Error: GEMINI_API_KEY environment variable not set.")
+    # In a production environment, you might want to exit or handle this more gracefully.
+    # For this application, we'll allow it to start but Gemini features will fail.
+
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Configure DeepSeek API via OpenRouter
@@ -111,7 +80,7 @@ def retry_with_backoff(func, *args, **kwargs):
 
 # Initialize the Gemini model - using the latest pro model that supports vision
 try:
-    gemini_model = genai.GenerativeModel('gemini-1.5-pro-latest') # Renamed to gemini_model for clarity
+    gemini_model = genai.GenerativeModel('gemini-1.5-flash-latest') # Renamed to gemini_model for clarity
     print("Successfully initialized Gemini model")
 except Exception as e:
     print(f"Error initializing Gemini model: {str(e)}")
@@ -123,11 +92,11 @@ def process_image(image_data):
     try:
         print("\n=== Starting Image Processing ===")
         print("Step 1: Checking image data...")
-        
+
         if not image_data:
             print("Error: No image data received")
-            return "Error: No image data received"
-            
+            return {"error": "Error: No image data received"}
+
         try:
             if isinstance(image_data, str):
                 if image_data.startswith('data:image'):
@@ -138,41 +107,41 @@ def process_image(image_data):
                         print("Base64 conversion successful")
                     except Exception as e:
                         print(f"Base64 decode error: {str(e)}")
-                        return f"Error decoding image: {str(e)}"
+                        return {"error": f"Error decoding image: {str(e)}"}
                 else:
                     print("Error: Invalid image data format")
-                    return "Error: Invalid image data format"
+                    return {"error": "Error: Invalid image data format"}
             else:
-                image_bytes = image_data # Assuming it's already bytes
-                
+                image_bytes = image_data  # Assuming it's already bytes
+
             print("Step 2: Opening image...")
             try:
                 image = Image.open(BytesIO(image_bytes))
                 print(f"Image opened successfully. Format: {image.format}, Size: {image.size}, Mode: {image.mode}")
             except Exception as e:
                 print(f"Error opening image: {str(e)}")
-                return f"Error opening image: {str(e)}"
-            
+                return {"error": f"Error opening image: {str(e)}"}
+
             print("Step 3: Converting image format...")
             try:
-                if image.mode in ('RGBA', 'P'): # Convert to RGB if necessary
+                if image.mode in ('RGBA', 'P'):  # Convert to RGB if necessary
                     image = image.convert('RGB')
                     print("Converted to RGB mode")
             except Exception as e:
                 print(f"Error converting image format: {str(e)}")
-                return f"Error converting image format: {str(e)}"
-            
+                return {"error": f"Error converting image format: {str(e)}"}
+
             print("Step 4: Resizing image if needed...")
             try:
-                max_size = 768 # Example max size
+                max_size = 768  # Example max size
                 if max(image.size) > max_size:
                     ratio = max_size / max(image.size)
                     new_size = tuple(int(dim * ratio) for dim in image.size)
-                    image = image.resize(new_size, Image.Resampling.LANCZOS) # Using LANCZOS for quality
+                    image = image.resize(new_size, Image.Resampling.LANCZOS)  # Using LANCZOS for quality
                     print(f"Image resized to {new_size}")
             except Exception as e:
                 print(f"Error resizing image: {str(e)}")
-                return f"Error resizing image: {str(e)}"
+                return {"error": f"Error resizing image: {str(e)}"}
 
             print("Step 5: Preparing for Gemini API to extract text...")
             gemini_ocr_prompt = """
@@ -185,7 +154,7 @@ def process_image(image_data):
             """
 
             if not gemini_model:
-                return "Error: Gemini model not initialized."
+                return {"error": "Error: Gemini model not initialized."}
 
             print("Step 6: Calling Gemini API for OCR...")
             try:
@@ -193,7 +162,7 @@ def process_image(image_data):
                 # Determine image format; default to JPEG if not available or unsupported by PIL for saving
                 save_format = image.format if image.format and image.format.upper() in ['JPEG', 'PNG', 'WEBP'] else 'JPEG'
                 mime_type = f'image/{save_format.lower()}'
-                
+
                 image.save(img_byte_arr, format=save_format)
                 img_byte_arr = img_byte_arr.getvalue()
 
@@ -204,42 +173,42 @@ def process_image(image_data):
                     ])
                 )
                 print("Received response from Gemini API for OCR")
-                
+
                 if not gemini_response or not hasattr(gemini_response, 'text'):
                     print("Error: Invalid or empty response from Gemini OCR")
-                    return "Error: Could not extract text using Gemini"
-                    
+                    return {"error": "Error: Could not extract text using Gemini"}
+
                 extracted_text = gemini_response.text.strip()
                 print(f"Text extracted by Gemini: {extracted_text[:200]}...")
 
                 if not extracted_text or "No Halegannada text detected" in extracted_text:
-                    return "No Halegannada text detected in image"
-                
+                    return {"extracted_text": "No Halegannada text detected in image", "english": ""}
+
                 print("Step 7: Translating extracted text using DeepSeek API...")
-                english_translation = get_english_translation(extracted_text) # This now uses DeepSeek
-                
+                english_translation = get_english_translation(extracted_text)  # This now uses DeepSeek
+
                 if "Translation error" in english_translation or "not available" in english_translation:
                     print(f"DeepSeek translation failed for extracted text: {english_translation}")
-                    return "Error translating extracted text with DeepSeek"
+                    return {"extracted_text": extracted_text, "error": "Error translating extracted text with DeepSeek"}
 
                 print(f"DeepSeek Translation successful. Result: {english_translation[:100]}...")
-                return english_translation
-                
+                return {"extracted_text": extracted_text, "english": english_translation}
+
             except Exception as e:
                 print(f"Gemini API or subsequent DeepSeek call error: {str(e)}")
                 traceback.print_exc()
-                return f"Error during image processing pipeline: {str(e)}"
+                return {"error": f"Error during image processing pipeline: {str(e)}"}
 
-        except Exception as e: # Catches errors in image pre-processing
+        except Exception as e:  # Catches errors in image pre-processing
             print(f"Image pre-processing error: {str(e)}")
             traceback.print_exc()
-            return f"Image pre-processing error: {str(e)}"
+            return {"error": f"Image pre-processing error: {str(e)}"}
 
-    except Exception as e: # Broadest catch for any unexpected error in process_image
+    except Exception as e:  # Broadest catch for any unexpected error in process_image
         print("\n=== Error in process_image ===")
         print(f"Error: {str(e)}")
         traceback.print_exc()
-        return f"Overall error in process_image: {str(e)}"
+        return {"error": f"Overall error in process_image: {str(e)}"}
 
 def get_kannada_translation(word):
     """Get Kannada translation from Dictionary.pkl"""
@@ -377,20 +346,22 @@ def translate():
 
         if image_data:
             print("Image translation request received")
-            # Image processing inherently uses APIs for OCR and translation, so it's not affected by the 'source' flag.
-            english_translation_result = process_image(image_data)
+            # Image processing now returns a dictionary
+            processing_result = process_image(image_data)
 
-            if isinstance(english_translation_result, str) and any(err_keyword in english_translation_result.lower() for err_keyword in ['error', 'failed', 'not detected', 'unavailable']):
-                status_code = 429 if "rate limit" in english_translation_result.lower() else 500
+            if "error" in processing_result:
+                error_message = processing_result["error"]
+                status_code = 429 if "rate limit" in error_message.lower() else 500
                 return jsonify({
-                    'error': english_translation_result,
+                    'error': error_message,
                     'status': 'error',
                     'retry_after': INITIAL_RETRY_DELAY if status_code == 429 else None
                 }), status_code
 
-            print(f"Image translation completed. Final English result: {english_translation_result[:100]}...")
+            print(f"Image processing completed. Extracted: '{processing_result.get('extracted_text', '')[:100]}...', Translated: '{processing_result.get('english', '')[:100]}...'")
             return jsonify({
-                'english': english_translation_result,
+                'extracted_text': processing_result.get('extracted_text', 'No text detected.'),
+                'english': processing_result.get('english', 'Translation not available.'),
                 'status': 'completed'
             })
 
@@ -426,45 +397,10 @@ def translate():
         print(error_msg)
         traceback.print_exc()
         return jsonify({
-            'error': error_msg, 
+            'error': error_msg,
             'status': 'error',
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
-
-def get_english_translation_seq2seq(text_input):
-    """Translate Halegannada to English using the Seq2Seq model."""
-    if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
-        print("Seq2Seq model or tokenizers are not available.")
-        return None  # Return None to indicate fallback
-
-    try:
-        # Tokenize and pad the input text
-        input_seq = input_tokenizer.texts_to_sequences([text_input])
-        padded_input_seq = pad_sequences(input_seq, maxlen=max_input_len, padding='post')
-
-        # Get model prediction
-        prediction = seq2seq_model.predict(padded_input_seq)
-        predicted_ids = np.argmax(prediction, axis=-1)
-
-        # Detokenize the predicted sequence
-        target_word_index = target_tokenizer.word_index
-        reverse_target_word_index = {v: k for k, v in target_word_index.items()}
-
-        translated_words = []
-        for idx in predicted_ids[0]:
-            if idx > 0:  # Ignore padding
-                word = reverse_target_word_index.get(idx)
-                if word:
-                    if word == '<end>': # Stop at end token
-                        break
-                    translated_words.append(word)
-
-        return ' '.join(translated_words)
-
-    except Exception as e:
-        print(f"Error during Seq2Seq translation: {str(e)}")
-        traceback.print_exc()
-        return None # Fallback on error
 
 
 @app.route('/translate-halegannada', methods=['POST'])
@@ -504,9 +440,11 @@ def translate_halegannada():
         return jsonify({'error': error_msg, 'status': 'error'}), 500
 
 if __name__ == '__main__':
-    # Ensure the 'assets' directory exists, if not, create it.
-    # This is mainly for the Dictionary.pkl, but good practice.
+    # Ensure the 'assets' directory exists.
     if not os.path.exists('assets'):
         os.makedirs('assets')
         print("Created 'assets' directory as it was missing.")
-    app.run(debug=True, port=5000) 
+
+    # Running with debug=False to prevent the auto-reloader from causing issues during verification.
+    # The reloader can be problematic in some environments.
+    app.run(debug=False, port=5000)
