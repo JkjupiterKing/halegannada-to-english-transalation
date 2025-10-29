@@ -70,13 +70,13 @@ except Exception as e:
     seq2seq_model = None # Ensure model is None if loading fails
 
 # Configure Gemini API
-# GEMINI_API_KEY = "AIzaSyB-UE5d4vnXhv9WdAL6_vTYqlp4inq0O7s" # Replace with your actual Gemini API key
-GEMINI_API_KEY = "Apikey"
+GEMINI_API_KEY = "AIzaSyB-UE5d4vnXhv9WdAL6_vTYqlp4inq0O7s" # Replace with your actual Gemini API key
+# GEMINI_API_KEY = "Apikey"
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Configure DeepSeek API via OpenRouter
-DEEPSEEK_API_KEY = "openaikey" # This is an OpenRouter key
-# DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
+# DEEPSEEK_API_KEY = "openaikey" # This is an OpenRouter key
+DEEPSEEK_API_KEY = "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" # This is an OpenRouter key
 deepseek_client = openai.OpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://openrouter.ai/api/v1")
 
 # Rate limiting and retry configuration

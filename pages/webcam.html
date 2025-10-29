@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Webcam Translation - Halegannada Translation Hub</title>
+    <title>Webcam Translation - ಹಳೆಗನ್ನಡ</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;700&display=swap"
       rel="stylesheet"
     />
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <link rel="stylesheet" href="../assets/css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2/dist/tesseract.min.js"></script>
   </head>
   <body>
     <nav class="navbar navbar-expand-lg">
@@ -33,22 +33,16 @@
               <a class="nav-link" href="/">Home</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/pages/text-translation.html"
-                >Text Translation</a
-              >
+              <a class="nav-link" href="/pages/text-translation.html">Text Translation</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="/pages/hale-hosa-kannada.html"
-                >Hale-Hosa Kannada</a
-              >
-            </li>
-             <li class="nav-item">
-              <a class="nav-link" href="/pages/hale-hosa-seq2seq.html"
-                >Hale-Hosa Seq2Seq</a
-              >
+              <a class="nav-link" href="/pages/hale-hosa-kannada.html">Hale-Hosa Kannada</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/pages/webcam.html">Webcam</a>
+              <a class="nav-link" href="/pages/hale-hosa-seq2seq.html">Hale-Hosa Seq2Seq</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link active" href="/pages/webcam.html">Webcam</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/pages/about.html">About</a>
@@ -63,89 +57,100 @@
       <div class="row">
         <div class="col-md-6">
           <video id="webcam" width="100%" height="auto" autoplay></video>
-          <button id="captureBtn" class="btn btn-danger mt-3">
-            Capture Text
+          <button id="captureBtn" class="btn btn-danger mt-3 w-100">
+            Capture & Translate
           </button>
         </div>
+
         <div class="col-md-6">
           <h3 class="mt-3">Captured Image</h3>
-          <canvas id="canvas" style="display: none"></canvas>
-          <img id="capturedImage" src="" alt="Captured Image" class="img-fluid" />
-          <h3 class="mt-3">Extracted Halegannada Text</h3>
-          <div id="ocrResult" class="p-3 border bg-light"></div>
-          <h3 class="mt-3">English Translation</h3>
-          <div id="translationResult" class="p-3 border bg-light"></div>
+          <canvas id="canvas" style="display:none"></canvas>
+          <img id="capturedImage" src="" alt="Captured Image" class="img-fluid mb-3" />
+
+          <h3>Extracted Halegannada Text</h3>
+          <div id="ocrResult" class="p-3 border bg-light mb-3">No text yet.</div>
+
+          <h3>ಹೊಸಗನ್ನಡ (Hosa Kannada)</h3>
+          <div id="kannadaOutput" class="p-3 border bg-light mb-3">—</div>
+
+          <h3>English Translation</h3>
+          <div id="englishOutput" class="p-3 border bg-light">—</div>
         </div>
       </div>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      const video = document.getElementById('webcam');
-      const captureBtn = document.getElementById('captureBtn');
-      const canvas = document.getElementById('canvas');
-      const capturedImage = document.getElementById('capturedImage');
-      const ocrResult = document.getElementById('ocrResult');
-      const translationResult = document.getElementById('translationResult');
-      const context = canvas.getContext('2d');
+      const video = document.getElementById("webcam");
+      const captureBtn = document.getElementById("captureBtn");
+      const canvas = document.getElementById("canvas");
+      const capturedImage = document.getElementById("capturedImage");
+      const ocrResult = document.getElementById("ocrResult");
+      const kannadaOutput = document.getElementById("kannadaOutput");
+      const englishOutput = document.getElementById("englishOutput");
+      const context = canvas.getContext("2d");
 
       // Access webcam
       if (navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ video: true })
-          .then(function (stream) {
-            video.srcObject = stream;
-          })
-          .catch(function (error) {
-            console.log("Something went wrong!", error);
-            ocrResult.innerText = "Error: Could not access webcam. Please grant permission.";
+        navigator.mediaDevices
+          .getUserMedia({ video: true })
+          .then((stream) => (video.srcObject = stream))
+          .catch((error) => {
+            console.error("Webcam access error:", error);
+            ocrResult.innerText = "Could not access webcam. Please allow camera.";
           });
       }
 
-      // Capture image and perform OCR
-      captureBtn.addEventListener('click', async () => {
-        ocrResult.innerText = 'Processing...';
-        translationResult.innerText = '';
-        capturedImage.src = '';
+      captureBtn.addEventListener("click", async () => {
+        ocrResult.innerText = "Recognizing text...";
+        kannadaOutput.innerText = "";
+        englishOutput.innerText = "";
 
-        // Set canvas dimensions to match video
+        // Capture image from webcam
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
 
-        // Display captured image
-        const imageDataUrl = canvas.toDataURL('image/png');
+        const imageDataUrl = canvas.toDataURL("image/png");
         capturedImage.src = imageDataUrl;
 
-        // OCR with Tesseract
-        const { data: { text } } = await Tesseract.recognize(
-          imageDataUrl,
-          'kan', // Specify Kannada language
-          {
-            logger: m => console.log(m) // Log progress
+        try {
+          // Perform OCR using Tesseract.js (like text-translation.html)
+          const worker = await Tesseract.createWorker("kan");
+          const result = await worker.recognize(imageDataUrl);
+          const text = result.data.text.trim();
+          await worker.terminate();
+
+          if (!text) {
+            ocrResult.innerText = "No text recognized from image.";
+            return;
           }
-        );
 
-        console.log('OCR Result:', text);
-        ocrResult.innerText = text || 'No text detected.';
+          ocrResult.innerText = text;
 
-        if (text) {
-          // Translate the extracted text
-          const response = await fetch('/translate', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              text: text,
-              source: 'dictionary'
-            }),
+          // Translate recognized text
+          kannadaOutput.innerText = "Translating...";
+          englishOutput.innerText = "Translating...";
+
+          const response = await fetch("/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
           });
+
+          if (!response.ok) throw new Error("Translation failed");
+
           const data = await response.json();
-          if (data.english) {
-            translationResult.innerText = data.english;
-          } else {
-            translationResult.innerText = 'Translation not available.';
-          }
+
+          kannadaOutput.innerText =
+            data.kannada || "Kannada translation not available.";
+          englishOutput.innerText =
+            data.english || "English translation not available.";
+        } catch (error) {
+          console.error("Error:", error);
+          ocrResult.innerText = "Error recognizing text. Please try again.";
+          kannadaOutput.innerText = "";
+          englishOutput.innerText = "";
         }
       });
     </script>
