@@ -355,9 +355,6 @@ def get_hosa_kannada_translation_api(text_to_translate):
         print(error_message)
         return "Hosa Kannada translation error: API unavailable or failed"
 
-@app.route('/')
-def index():
-    return send_from_directory('.', 'index.html')
 
 @app.route('/pages/<path:filename>')
 def serve_pages(filename):
@@ -443,8 +440,8 @@ def translate():
             'retry_after': INITIAL_RETRY_DELAY # Generic retry suggestion for unexpected server errors
         }), 500
 
-def get_english_translation_seq2seq(text_input):
-    """Translate Halegannada to English using the Seq2Seq model."""
+def get_hosa_kannada_translation_seq2seq(text_input):
+    """Translate Halegannada to Hosa Kannada using the Seq2Seq model."""
     if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
         print("Seq2Seq model or tokenizers are not available.")
         return None  # Return None to indicate fallback
@@ -521,9 +518,6 @@ def home():
     return "✅ Free Text-to-Speech Server with assets/ is running"
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
 # Hale-hosa kannada
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
@@ -556,6 +550,43 @@ def translate_halegannada():
 
     except Exception as e:
         error_msg = f"Halegannada translation endpoint error: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
+
+@app.route('/translate-seq2seq', methods=['POST'])
+def translate_seq2seq():
+    try:
+        data = request.json
+        text_input = data.get('text', '').strip()
+
+        if not text_input:
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+
+        print(f"Seq2Seq translation request received: {text_input}")
+
+        # --- Hosa Kannada Translation (Seq2Seq Model) ---
+        kannada_translation = get_hosa_kannada_translation_seq2seq(text_input)
+        if kannada_translation is None:
+            # If model is not available, return a specific message
+            print("Seq2Seq model is not available. Returning unavailable message.")
+            kannada_translation = "Translation model is currently unavailable."
+            english_translation = "Translation model is currently unavailable."
+        else:
+            # If model is available, proceed to get English translation
+            english_translation = get_english_translation(text_input)
+
+        print(f"Hosa Kannada (Seq2Seq): {kannada_translation}")
+        print(f"English (API): {english_translation}")
+
+        return jsonify({
+            'kannada_translation': kannada_translation,
+            'english_translation': english_translation,
+            'status': 'completed'
+        })
+
+    except Exception as e:
+        error_msg = f"Seq2Seq translation endpoint error: {str(e)}"
         print(error_msg)
         traceback.print_exc()
         return jsonify({'error': error_msg, 'status': 'error'}), 500
