@@ -477,7 +477,35 @@ def get_english_translation_seq2seq(text_input):
         print(f"Error during Seq2Seq translation: {str(e)}")
         traceback.print_exc()
         return None # Fallback on error
-    
+
+def get_hosa_kannada_translation_seq2seq(text_input):
+    """Translate Halegannada to Hosa Kannada using the Seq2Seq model."""
+    if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
+        print("Seq2Seq model or tokenizers are not available.")
+        return None  # Return None to indicate fallback
+    try:
+        # Tokenize and pad the input text
+        input_seq = input_tokenizer.texts_to_sequences([text_input])
+        padded_input_seq = pad_sequences(input_seq, maxlen=max_input_len, padding='post')
+        # Get model prediction
+        prediction = seq2seq_model.predict(padded_input_seq)
+        predicted_ids = np.argmax(prediction, axis=-1)
+        # Detokenize the predicted sequence
+        target_word_index = target_tokenizer.word_index
+        reverse_target_word_index = {v: k for k, v in target_word_index.items()}
+        translated_words = []
+        for idx in predicted_ids[0]:
+            if idx > 0:  # Ignore padding
+                word = reverse_target_word_index.get(idx)
+                if word:
+                    if word == '<end>': # Stop at end token
+                        break
+                    translated_words.append(word)
+        return ' '.join(translated_words)
+    except Exception as e:
+        print(f"Error during Seq2Seq translation: {str(e)}")
+        traceback.print_exc()
+        return None # Fallback on error
 
 @app.route("/speak", methods=["POST"])
 def speak():
@@ -520,10 +548,6 @@ def serve_audio(filename):
 def home():
     return "✅ Free Text-to-Speech Server with assets/ is running"
 
-
-if __name__ == "__main__":
-    app.run(debug=True)
-
 # Hale-hosa kannada
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
@@ -560,6 +584,36 @@ def translate_halegannada():
         traceback.print_exc()
         return jsonify({'error': error_msg, 'status': 'error'}), 500
 
+@app.route('/translate-hale-hosa-seq2seq', methods=['POST'])
+def translate_hale_hosa_seq2seq():
+    try:
+        data = request.json
+        text_input = data.get('text', '').strip()
+        if not text_input:
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+        print(f"Seq2Seq translation request received: {text_input}")
+        # --- Hosa Kannada Translation (Seq2Seq) ---
+        hosa_kannada_translation = get_hosa_kannada_translation_seq2seq(text_input)
+        # --- English Translation (API) ---
+        english_translation = get_english_translation(text_input)
+
+        if hosa_kannada_translation is None:
+            return jsonify({
+                'error': 'Translation model not available. Please check server logs.',
+                'status': 'error'
+            }), 503  # 503 Service Unavailable is appropriate here
+        print(f"Hosa Kannada (Seq2Seq): {hosa_kannada_translation}")
+        print(f"English (API): {english_translation}")
+        return jsonify({
+            'kannada_translation': hosa_kannada_translation,
+            'english_translation': english_translation,
+            'status': 'completed'
+        })
+    except Exception as e:
+        error_msg = f"Seq2Seq translation endpoint error: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
 
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
