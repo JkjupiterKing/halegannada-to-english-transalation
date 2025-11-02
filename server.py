@@ -521,9 +521,6 @@ def home():
     return "✅ Free Text-to-Speech Server with assets/ is running"
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
 # Hale-hosa kannada
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
@@ -556,6 +553,44 @@ def translate_halegannada():
 
     except Exception as e:
         error_msg = f"Halegannada translation endpoint error: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
+
+
+@app.route('/translate-seq2seq', methods=['POST'])
+def translate_seq2seq():
+    try:
+        data = request.json
+        text_input = data.get('text', '').strip()
+
+        if not text_input:
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+
+        print(f"Seq2Seq translation request received: {text_input}")
+
+        # ---- English Translation using Seq2Seq model ----
+        english_translation = get_english_translation_seq2seq(text_input)
+        if english_translation is None:
+            # Fallback to API if Seq2Seq fails
+            print("Seq2Seq translation failed. Falling back to API for English translation.")
+            english_translation = get_english_translation(text_input)
+
+
+        # ---- Hosa Kannada Translation using API ----
+        kannada_translation = get_hosa_kannada_translation_api(text_input)
+
+        print(f"Hosa Kannada Translation (API): {kannada_translation}")
+        print(f"English Translation (Seq2Seq): {english_translation}")
+
+        return jsonify({
+            'kannada_translation': kannada_translation,
+            'english_translation': english_translation,
+            'status': 'completed'
+        })
+
+    except Exception as e:
+        error_msg = f"Seq2Seq translation endpoint error: {str(e)}"
         print(error_msg)
         traceback.print_exc()
         return jsonify({'error': error_msg, 'status': 'error'}), 500
