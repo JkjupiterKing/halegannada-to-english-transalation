@@ -136,7 +136,7 @@
         document.getElementById("englishOutput").textContent = "Translating...";
 
         try {
-          const response = await fetch("/translate-halegannada", {
+          const response = await fetch("/translate-seq2seq", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -153,7 +153,7 @@
 
           // Update translations in the UI
           document.getElementById("kannadaOutput").textContent =
-            data.kannada_translation || "Translation not available";
+            "Translation not available for this model";
           document.getElementById("englishOutput").textContent =
             data.english_translation || "Translation not available";
         } catch (error) {
