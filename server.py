@@ -43,31 +43,15 @@ input_tokenizer = None
 target_tokenizer = None
 max_input_len = 200 # Should match the model's training configuration
 
-try:
-    if os.path.exists(SEQ2SEQ_MODEL_PATH):
-        seq2seq_model = load_model(SEQ2SEQ_MODEL_PATH)
-        print("Successfully loaded Seq2Seq model.")
-    else:
-        print(f"Warning: Seq2Seq model not found at {SEQ2SEQ_MODEL_PATH}")
+# --- Seq2Seq Model Loading ---
+SEQ2SEQ_MODEL_PATH = 'assets/seq2seq_model.h5'
+INPUT_TOKENIZER_PATH = 'assets/input_tokenizer.pkl'
+TARGET_TOKENIZER_PATH = 'assets/target_tokenizer.pkl'
 
-    if os.path.exists(INPUT_TOKENIZER_PATH):
-        with open(INPUT_TOKENIZER_PATH, 'rb') as f:
-            input_tokenizer = pickle.load(f)
-        print("Successfully loaded input tokenizer.")
-    else:
-        print(f"Warning: Input tokenizer not found at {INPUT_TOKENIZER_PATH}")
-
-    if os.path.exists(TARGET_TOKENIZER_PATH):
-        with open(TARGET_TOKENIZER_PATH, 'rb') as f:
-            target_tokenizer = pickle.load(f)
-        print("Successfully loaded target tokenizer.")
-    else:
-        print(f"Warning: Target tokenizer not found at {TARGET_TOKENIZER_PATH}")
-
-except Exception as e:
-    print(f"Error loading Seq2Seq model or tokenizers: {str(e)}")
-    traceback.print_exc()
-    seq2seq_model = None # Ensure model is None if loading fails
+seq2seq_model = None
+input_tokenizer = None
+target_tokenizer = None
+max_input_len = 200 # Should match the model's training configuration
 
 # Configure Gemini API
 GEMINI_API_KEY = "AIzaSyB-UE5d4vnXhv9WdAL6_vTYqlp4inq0O7s" # Replace with your actual Gemini API key
@@ -445,11 +429,20 @@ def translate():
 
 def get_english_translation_seq2seq(text_input):
     """Translate Halegannada to English using the Seq2Seq model."""
-    if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
-        print("Seq2Seq model or tokenizers are not available.")
-        return None  # Return None to indicate fallback
-
+    global seq2seq_model, input_tokenizer, target_tokenizer
     try:
+        if not all([seq2seq_model, input_tokenizer, target_tokenizer]):
+            if os.path.exists(SEQ2SEQ_MODEL_PATH) and os.path.exists(INPUT_TOKENIZER_PATH) and os.path.exists(TARGET_TOKENIZER_PATH):
+                seq2seq_model = load_model(SEQ2SEQ_MODEL_PATH)
+                with open(INPUT_TOKENIZER_PATH, 'rb') as f:
+                    input_tokenizer = pickle.load(f)
+                with open(TARGET_TOKENIZER_PATH, 'rb') as f:
+                    target_tokenizer = pickle.load(f)
+                print("Successfully loaded Seq2Seq model and tokenizers.")
+            else:
+                print("Warning: Seq2Seq model or tokenizers not found. Translation will be unavailable.")
+                return "Seq2Seq model or tokenizers not found."
+
         # Tokenize and pad the input text
         input_seq = input_tokenizer.texts_to_sequences([text_input])
         padded_input_seq = pad_sequences(input_seq, maxlen=max_input_len, padding='post')
@@ -476,7 +469,7 @@ def get_english_translation_seq2seq(text_input):
     except Exception as e:
         print(f"Error during Seq2Seq translation: {str(e)}")
         traceback.print_exc()
-        return None # Fallback on error
+        return "Error during Seq2Seq translation."
     
 
 @app.route("/speak", methods=["POST"])
@@ -521,9 +514,6 @@ def home():
     return "✅ Free Text-to-Speech Server with assets/ is running"
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
 # Hale-hosa kannada
 @app.route('/translate-halegannada', methods=['POST'])
 def translate_halegannada():
@@ -560,6 +550,35 @@ def translate_halegannada():
         traceback.print_exc()
         return jsonify({'error': error_msg, 'status': 'error'}), 500
 
+@app.route('/translate-seq2seq', methods=['POST'])
+def translate_seq2seq():
+    try:
+        data = request.json
+        text_input = data.get('text', '').strip()
+
+        if not text_input:
+            return jsonify({'error': 'No text provided', 'status': 'error'}), 400
+
+        print(f"Seq2Seq translation request received: {text_input}")
+
+        # Perform the Seq2Seq translation
+        english_translation = get_english_translation_seq2seq(text_input)
+
+        if english_translation is None:
+            return jsonify({'error': 'Translation failed or model not available', 'status': 'error'}), 500
+
+        print(f"Seq2Seq English Translation: {english_translation}")
+
+        return jsonify({
+            'english_translation': english_translation,
+            'status': 'completed'
+        })
+
+    except Exception as e:
+        error_msg = f"Seq2Seq translation endpoint error: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        return jsonify({'error': error_msg, 'status': 'error'}), 500
 
 if __name__ == '__main__':
     # Ensure the 'assets' directory exists, if not, create it.
